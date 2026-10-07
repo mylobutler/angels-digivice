@@ -114,6 +114,12 @@ body.chatting .playbar{display:none}
 .arbtn:active{transform:translateY(1px)}
 .arbtn:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 .arbtn.on{background:var(--gold);color:#02040a;text-shadow:none}
+/* the MENU button mirrors it at the bottom left: back to the start screen to pick another Digivice */
+.menubtn{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:-12px;bottom:0;z-index:2;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--neon);color:var(--neon);background:radial-gradient(circle at 50% 30%,var(--glow-soft),rgba(6,10,19,.94) 72%);
+  box-shadow:0 0 10px var(--glow-soft),inset 0 0 8px var(--glow-soft);font:800 9px/1 var(--f-tron);letter-spacing:.06em;text-shadow:0 0 6px var(--glow)}
+.menubtn:active{transform:translateY(1px)}
+.menubtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .lcd{position:relative;width:var(--d);height:var(--d);box-sizing:border-box;border-radius:50%;border:7px solid var(--bezel);background:var(--lcd);overflow:hidden;color:var(--ink);box-shadow:0 0 0 1px var(--neon),0 0 14px var(--glow-soft),inset 0 4px 12px rgba(0,0,0,.28)}
 .lcd::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:50%;
   background-image:linear-gradient(to right,rgba(34,48,26,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(34,48,26,.08) 1px,transparent 1px);
@@ -256,6 +262,7 @@ button.fig:focus-visible{outline:2px dashed var(--ink)}
       <div class="msg" id="msg" aria-live="polite"></div>
       <div class="panel" id="panel" hidden></div>
     </div></div>
+    <button class="menubtn" id="i-menu" title="Main menu" aria-label="Main menu: pick another Digivice">MENU</button>
     <button class="arbtn" id="i-ar" title="See me in 3D and AR" aria-label="See your partner in 3D and AR">AR</button></div>
     <div class="icons" id="bottom">
       <button class="icon" data-act="battle" id="i-battle"><span>Battle</span></button>
@@ -294,9 +301,9 @@ button.fig:focus-visible{outline:2px dashed var(--ink)}
 
 <div class="setup" id="setup" hidden role="dialog" aria-modal="true" aria-labelledby="setup-h">
   <div class="setup-in">
-    <div class="kicker">Digivice // system boot</div>
+    <div class="kicker" id="setup-k">Digivice // system boot</div>
     <h1 id="setup-h">Pick your Digivice</h1>
-    <p class="setup-sub">Each one has its own partner</p>
+    <p class="setup-sub" id="setup-sub">Each one has its own partner</p>
     <div class="models" id="models" role="radiogroup" aria-label="Digivice model"></div>
     <div class="owner"><label for="owner">Whose Digivice is it?</label><input id="owner" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Angel"></div>
     <button class="power" id="power">Power on</button>
@@ -10099,7 +10106,7 @@ function statusPanel(){
     <span>Battles</span><b>${S.wins} won ${S.losses} lost</b><span>Owner</span><b>${esc(OWNER())}</b></div>
     <div class="ptitle"><span>Digivolution path</span></div><div class="path" id="path"></div><p class="req">${reqText()} Progress saves on this device.</p>`,
     after:()=>drawPath(false),items:[{label:'Rename partner',act:()=>namePanel(false)},{label:'Friends',detail:n?`${n} online`:'Codes',act:()=>linkPanel()},bg,sp,snd,...(SAMPLE?[sm]:[]),
-      {label:'Device & owner',act:()=>{closePanel();showSetup(false)}},so,{label:'Close',act:closePanel}]});
+      {label:'Main menu',detail:'Digivices',act:()=>{closePanel();showSetup(false)}},so,{label:'Close',act:closePanel}]});
 }
 /* every form, bright when earned; in the Digivolve menu each one is a button */
 function drawPath(tap){
@@ -10138,6 +10145,8 @@ function showSetup(first){
   modelsEl.querySelectorAll('.model').forEach(b=>{const m=MODELS.find(x=>x.id===b.dataset.id),c=cardSprite(m.line),k=document.createElement('canvas');
     k.width=c.width;k.height=c.height;k.getContext('2d').drawImage(c,0,0);k.style.width=c.width+'px';k.style.height=c.height+'px';k.style.marginBottom=-(c.height-c.fy)+'px';b.querySelector('.mini').append(k);
     b.onclick=()=>{setupSel=b.dataset.id;applyModel(setupSel);modelsEl.querySelectorAll('.model').forEach(x=>x.setAttribute('aria-checked',String(x===b)));ac();beep()}});
+  $('#setup-k').textContent=first?'Digivice // system boot':'Digivice // main menu';
+  $('#setup-sub').textContent=first?'Each one has its own partner':'Each one keeps its own partner safe';
   ownerEl.value=S.owner||'Angel';$('#cancel').hidden=first;setupEl.hidden=false;applyModel(setupSel);
 }
 function closeSetup(ok){
@@ -10155,7 +10164,7 @@ function closeSetup(ok){
   if((setupFirst||moved)&&S.stage>0&&!S.name)setTimeout(()=>namePanel(true),500);
 }
 $('#power').onclick=()=>closeSetup(true);$('#cancel').onclick=()=>closeSetup(false);
-ownerEl.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();closeSetup(true)}};
+ownerEl.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();closeSetup(true)}else if(e.key==='Escape'&&!setupFirst){e.preventDefault();closeSetup(false)}};
 
 /* ---------- buttons ---------- */
 const ICONS={
@@ -10241,10 +10250,22 @@ function open3D(){
   AR.open(o).then(()=>{if(!AR.isOpen())arBtn.classList.remove('on')});
 }
 arBtn.onclick=open3D;
+/* the MENU button: back to the start screen to pick another Digivice (each one keeps its own partner) */
+function openMenu(){
+  ac();beep();
+  if(listening){try{rec.abort()}catch(e){}listening=false;setTalkUI()}
+  if(chatOpen)closeChat();
+  if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');
+  if(anim&&['evo','dedi','hatch'].includes(anim.type))return say(anim.type==='hatch'?'Hatching... one sec!':'Digivolving... one sec!');
+  showSetup(false);
+}
+$('#i-menu').onclick=openMenu;
 chipEl.onclick=()=>{ac();beep();if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');linkPanel()};
 cv.addEventListener('pointerdown',e=>{e.preventDefault();ac();petTap()});
-addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName)||!setupEl.hidden||AR.isOpen())return;const k=e.key.toLowerCase();
-  if(k==='a'||k==='arrowright'){e.preventDefault();keyA()}else if(k==='b'||k==='enter'||k===' '){e.preventDefault();keyB()}else if(k==='c'||k==='escape'){e.preventDefault();keyC()}});
+addEventListener('keydown',e=>{if(!setupEl.hidden&&e.key==='Escape'&&!setupFirst){e.preventDefault();return closeSetup(false)}
+  if(e.metaKey||e.ctrlKey||e.altKey||e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName)||!setupEl.hidden||AR.isOpen())return;const k=e.key.toLowerCase();
+  if(k==='a'||k==='arrowright'){e.preventDefault();keyA()}else if(k==='b'||k==='enter'||k===' '){e.preventDefault();keyB()}else if(k==='c'||k==='escape'){e.preventDefault();keyC()}
+  else if(k==='m'){e.preventDefault();openMenu()}});
 ['touchend','click'].forEach(ev=>addEventListener(ev,()=>ac(),{capture:true,passive:true}));
 
 /* ---------- side display ---------- */
