@@ -29,15 +29,16 @@
   --ink-hi:#e8fbff; --dim:#8ea3bf; --gold:#ffd23a; --warn:#ff4d6d;
   --bezel:#05080f; --plate:rgba(232,240,214,.88); --lcd:#c5d4a0; --ink:#22301a;
   --k:1;
-  --d:clamp(160px,min(calc(min(100vw,calc(380px * var(--k) + 8px)) - 76px),calc(100vh - 140px - 231px * var(--k))),420px);
+  --d:clamp(160px,min(calc(min(100vw,calc(380px * var(--k) + 8px)) - 48px),calc(100vh - 124px - 231px * var(--k))),460px);
   --f-lcd:"Press Start 2P", ui-monospace, Menlo, monospace;
   --f-dev:"Silkscreen", ui-monospace, Menlo, monospace;
   --f-tron:"Orbitron", "Silkscreen", ui-sans-serif, system-ui, sans-serif;
   color-scheme:dark;
 }
 :root[data-tod="dawn"]{--bg-2:#2a1840}:root[data-tod="day"]{--bg-2:#0c2c52}:root[data-tod="dusk"]{--bg-2:#2e1236}
-@supports (height:100dvh){:root{--d:clamp(160px,min(calc(min(100vw,calc(380px * var(--k) + 8px)) - 76px),calc(100dvh - 140px - 231px * var(--k) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))),420px)}}
-/* the Digivice fills the whole screen: on taller screens its buttons, bars and keys grow (--k) and the rows spread out to the edges */
+@supports (height:100dvh){:root{--d:clamp(160px,min(calc(min(100vw,calc(380px * var(--k) + 8px)) - 48px),calc(100dvh - 124px - 231px * var(--k) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))),460px)}}
+/* the Digivice fills the whole screen: the round screen is nearly as wide as the phone (its ring reaches into the side padding);
+   on taller screens its buttons, bars and keys grow (--k) and the rows spread out to the edges */
 @media (min-width:360px) and (min-height:700px){:root{--k:1.1}}
 @media (min-width:390px) and (min-height:780px){:root{--k:1.2}}
 @media (min-width:420px) and (min-height:880px){:root{--k:1.3}}
@@ -52,7 +53,7 @@ body{margin:0;background:radial-gradient(ellipse 130% 70% at 50% -10%,var(--bg-2
 .wrap{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:grid;place-items:center;
   padding:calc(14px + env(safe-area-inset-top,0px)) calc(4px + env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) calc(4px + env(safe-area-inset-left,0px))}
 @supports (height:100dvh){.wrap{min-height:100dvh}}
-.device{position:relative;width:min(100%,calc(380px * var(--k)));align-self:stretch;align-content:space-evenly;box-sizing:border-box;display:grid;justify-items:center;gap:8px;padding:26px 22px;
+.device{position:relative;width:min(100%,calc(380px * var(--k)));align-self:stretch;align-content:space-evenly;box-sizing:border-box;display:grid;justify-items:center;gap:8px;padding:20px 22px 16px;
   background:radial-gradient(ellipse 90% 55% at 50% 0%,rgba(20,34,60,.7),transparent 70%),linear-gradient(170deg,rgba(13,22,40,.8),rgba(6,10,19,.88) 70%);-webkit-backdrop-filter:blur(8px) saturate(1.3);backdrop-filter:blur(8px) saturate(1.3);
   border:2px solid var(--neon);border-radius:var(--shape);
   box-shadow:0 0 14px var(--glow),0 0 44px var(--glow-soft),inset 0 0 18px var(--glow-soft),0 24px 60px rgba(0,0,0,.8);transition:border-color .4s,box-shadow .4s}
@@ -113,16 +114,16 @@ body.chatting .playbar{display:none}
 .ring::before{content:"";position:absolute;inset:0;border-radius:50%;padding:3px;pointer-events:none;background:conic-gradient(var(--neon),transparent 22%,var(--neon-2) 48%,transparent 74%,var(--neon));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 6s linear infinite}
 @keyframes spin{to{transform:rotate(1turn)}}
-/* the AR button sits in the free corner at the screen's bottom right */
-.ringbox{position:relative}
-.arbtn{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;right:calc(-12px * var(--k));bottom:0;z-index:2;width:calc(44px * var(--k));height:calc(44px * var(--k));border-radius:50%;display:grid;place-items:center;
+/* the AR button sits in the free corner at the screen's bottom right; --cx keeps it inside the Digivice when the screen is full width */
+.ringbox{position:relative;margin-inline:-14px;--cx:calc(-1 * clamp(0px,(min(100vw,calc(380px * var(--k) + 8px)) - 44px - var(--d)) / 2,12px * var(--k)))}
+.arbtn{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;right:var(--cx);bottom:0;z-index:2;width:calc(44px * var(--k));height:calc(44px * var(--k));border-radius:50%;display:grid;place-items:center;
   border:1px solid var(--gold);color:var(--gold);background:radial-gradient(circle at 50% 30%,rgba(255,210,58,.26),rgba(6,10,19,.94) 72%);
   box-shadow:0 0 10px rgba(255,210,58,.45),inset 0 0 8px rgba(255,210,58,.22);font:800 calc(12px * var(--k))/1 var(--f-tron);letter-spacing:.05em;text-shadow:0 0 6px rgba(255,210,58,.85)}
 .arbtn:active{transform:translateY(1px)}
 .arbtn:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 .arbtn.on{background:var(--gold);color:#02040a;text-shadow:none}
 /* the MENU button mirrors it at the bottom left: back to the start screen to pick another Digivice */
-.menubtn{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:calc(-12px * var(--k));bottom:0;z-index:2;width:calc(44px * var(--k));height:calc(44px * var(--k));border-radius:50%;display:grid;place-items:center;
+.menubtn{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:var(--cx);bottom:0;z-index:2;width:calc(44px * var(--k));height:calc(44px * var(--k));border-radius:50%;display:grid;place-items:center;
   border:1px solid var(--neon);color:var(--neon);background:radial-gradient(circle at 50% 30%,var(--glow-soft),rgba(6,10,19,.94) 72%);
   box-shadow:0 0 10px var(--glow-soft),inset 0 0 8px var(--glow-soft);font:800 calc(9px * var(--k))/1 var(--f-tron);letter-spacing:.06em;text-shadow:0 0 6px var(--glow)}
 .menubtn:active{transform:translateY(1px)}
@@ -231,8 +232,8 @@ button.fig:focus-visible{outline:2px dashed var(--ink)}
 .cancel{all:unset;cursor:pointer;justify-self:center;padding:6px 12px;font:600 9px var(--f-tron);letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
 .cancel:focus-visible{outline:2px solid var(--gold)}
 /* short phone screens (small iPhones with Safari toolbars): no growing, tighter spacing and no key captions */
-@media (max-height:620px){:root{--k:1;--d:clamp(160px,min(calc(min(100vw,388px) - 76px),calc(100vh - 325px)),420px)}.device{gap:6px;padding-block:18px 14px}.keys{padding-top:0}.key{font-size:0;line-height:0;gap:0}}
-@supports (height:100dvh){@media (max-height:620px){:root{--d:clamp(160px,min(calc(min(100vw,388px) - 76px),calc(100dvh - 325px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))),420px)}}}
+@media (max-height:620px){:root{--k:1;--d:clamp(160px,min(calc(min(100vw,388px) - 48px),calc(100vh - 325px)),460px)}.device{gap:6px;padding-block:18px 14px}.keys{padding-top:0}.key{font-size:0;line-height:0;gap:0}}
+@supports (height:100dvh){@media (max-height:620px){:root{--d:clamp(160px,min(calc(min(100vw,388px) - 48px),calc(100dvh - 325px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))),460px)}}}
 @keyframes blink{to{visibility:hidden}}
 @media (max-width:500px){.device{width:100%}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
