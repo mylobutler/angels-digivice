@@ -211,8 +211,8 @@ button.fig:focus-visible{outline:2px dashed var(--ink)}
 .setup-sub{margin:-6px 0 0;font:7px/1.3 var(--f-dev);color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
 .kicker{font:600 9px var(--f-tron);letter-spacing:.34em;color:var(--neon);text-shadow:0 0 8px var(--glow);text-transform:uppercase}
 .setup h1{margin:0;font:800 clamp(17px,5.4vw,21px)/1.15 var(--f-tron);letter-spacing:.06em;text-transform:uppercase;color:#fff;text-shadow:0 0 12px var(--glow)}
-.models{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-.model{all:unset;box-sizing:border-box;cursor:pointer;min-width:0;display:grid;justify-items:center;gap:4px;padding:8px 2px 7px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035);color:var(--ink-hi)}
+.models{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.model{all:unset;box-sizing:border-box;cursor:pointer;flex:0 0 calc((100% - 28px) / 5);min-width:0;display:grid;justify-items:center;gap:4px;padding:8px 2px 7px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035);color:var(--ink-hi)}
 .model:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .model[aria-checked="true"]{border-color:var(--m);background:rgba(255,255,255,.07);box-shadow:0 0 14px var(--mg),inset 0 0 14px var(--mg)}
 .mini{position:relative;width:42px;height:54px;box-sizing:border-box;border:2px solid var(--m);border-radius:var(--sh);display:grid;place-items:center;background:#0a1120;box-shadow:0 0 8px var(--mg)}
@@ -220,6 +220,7 @@ button.fig:focus-visible{outline:2px dashed var(--ink)}
 .mini canvas{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);image-rendering:pixelated;image-rendering:crisp-edges}
 .model b{font:700 8px var(--f-tron);letter-spacing:.03em;text-transform:uppercase;color:#fff;white-space:nowrap}
 .model small{font:6px/1.2 var(--f-dev);color:var(--dim);text-transform:uppercase;white-space:nowrap}
+@media (max-width:360px){.model b{font-size:7px;letter-spacing:0}}
 .owner{display:grid;gap:6px;text-align:left}
 .owner label{font:600 9px var(--f-tron);letter-spacing:.22em;color:var(--neon);text-transform:uppercase}
 .owner input{all:unset;box-sizing:border-box;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--neon);background:rgba(0,0,0,.45);color:#fff;font:16px/1.2 var(--f-dev);box-shadow:inset 0 0 12px var(--glow-soft);user-select:text;-webkit-user-select:text}
@@ -349,16 +350,23 @@ function build(bw,bh,s,opt,fn){
     behind(fn){g.globalCompositeOperation='destination-over';fn();g.globalCompositeOperation='source-over'},
     /* big round eyes like Agumon's own: a dark rim, a coloured iris, a big black pupil and two shines. dir nudges the pupil (+1 right, -1 left).
        lids 1 = shut (a soft curve, for sleep and blinks), lids 2 = happy (^ ^); lids 3 is talking, with the eyes open */
-    ceyeAt(ex,ey,w,hh,iris,bg,dir=0){eyes.push({x:ex,y:ey,w,h:hh,bg});fill(OUT);
+    ceyeAt(ex,ey,w,hh,iris,bg,dir=0,dark=0){eyes.push({x:ex,y:ey,w,h:hh,bg});fill(OUT);
       if(lids===1||lids===2){const m=ey+Math.round(hh*(lids===1?.58:.42)),d=lids===1?-1:1,e=w>=7?2:1;
         g.fillRect(ex+e,m,w-2*e,1);g.fillRect(ex,m+d,e,1);g.fillRect(ex+w-e,m+d,e,1);return}
       const row=(j,W,H)=>{const t=(j+.5)/H*2-1;return Math.round(W/2*(1-Math.sqrt(Math.max(0,1-t*t))))};
       const oval=(x0,y0,W,H)=>{for(let j=0;j<H;j++){const i=row(j,W,H);g.fillRect(x0+i,y0+j,W-2*i,1)}};
-      oval(ex,ey,w,hh);const iw=w-2,ih=hh-2;fill(iris);oval(ex+1,ey+1,iw,ih);
+      oval(ex,ey,w,hh);const iw=w-2,ih=hh-2;
+      /* dark: a big black eye, the colour only as a crescent along the bottom, a square shine up top and a small one low down */
+      if(dark){const d=Math.max(1,Math.round(ih*.24)),x1=ex+1,y1=ey+1;fill(iris);
+        for(let j=0;j<ih;j++){const i=row(j,iw,ih),a=x1+i,b=x1+iw-i,k=j+d;if(k>=ih){g.fillRect(a,y1+j,b-a,1);continue}
+          const i2=row(k,iw,ih),a2=x1+i2,b2=x1+iw-i2;if(a2>a)g.fillRect(a,y1+j,a2-a,1);if(b>b2)g.fillRect(b2,y1+j,b-b2,1)}
+        const sw=w>=7?2:1,sh=hh>=8?2:1;fill(C.white);g.fillRect(x1+Math.max(0,Math.round(iw*.16)),y1+Math.round(ih*.1),sw,sh);
+        if(iw>=4&&ih>=5)g.fillRect(x1+iw-1-Math.round(iw*.22),y1+ih-1-Math.max(1,Math.round(ih*.14)),1,1);return}
+      fill(iris);oval(ex+1,ey+1,iw,ih);
       const pw=Math.max(1,Math.round(iw*.64)),ph=Math.max(2,Math.round(ih*.74)),p0=ex+1+Math.max(0,Math.min(iw-pw,Math.round((iw-pw)/2+dir*iw*.14))),q0=ey+1+Math.round((ih-ph)/2+ih*.08);
       fill(OUT);oval(p0,q0,pw,ph);
       fill(C.white);g.fillRect(p0,q0,w>=7?2:1,hh>=8?2:1);if(pw>=2&&ph>=4)g.fillRect(p0+pw-1,q0+ph-2,1,1)},
-    ceye(x,y,w,hh,iris,bg,dir){h.ceyeAt(Math.round(X(x)-w/2),Math.round(Y(y)-hh/2),w,hh,iris,bg,dir)},
+    ceye(x,y,w,hh,iris,bg,dir,dark){h.ceyeAt(Math.round(X(x)-w/2),Math.round(Y(y)-hh/2),w,hh,iris,bg,dir,dark)},
     ln(pts,c){fill(c);for(let i=1;i<pts.length;i++){const x0=Math.round(X(pts[i-1][0])),y0=Math.round(Y(pts[i-1][1])),x1=Math.round(X(pts[i][0])),y1=Math.round(Y(pts[i][1])),n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))||1;
       for(let k=0;k<=n;k++)g.fillRect(Math.round(x0+(x1-x0)*k/n),Math.round(y0+(y1-y0)*k/n),1,1)}},
     /* a little open smile with a pink tongue, centred on pixel column cx (can be a half pixel) */
@@ -442,6 +450,7 @@ function courage(h,x,y,k,c){for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/2,l
 /* every pose comes with its eyes open, shut, happy (^ ^ with an open mouth) and talking (open mouth) */
 function lidded(make){const c=make(0);c.shut=make(1);c.joy=make(2);c.talk=make(3);return c}
 const eyeSize=s=>[Math.max(3,Math.round(4.8*s)),Math.max(4,Math.round(6*s))];
+const aguDarkEye=s=>[Math.max(4,Math.round(6.2*s)),Math.max(5,Math.round(7.8*s))];
 function helmetTop(f){return f.helmet?-3.2:2.8}
 /* Agumon facing you: drawn once and mirrored so both sides match, then the tail and the eyes go on (forms 3-5 are drawn by aguEvo) */
 function front(f,lids=0){
@@ -450,8 +459,8 @@ function front(f,lids=0){
   const cv=build(44,44,s,{oy:4,ax:22,fy:39,mx:22,my:open?20.4:19,top:helmetTop(f),lids,mirror:1,after:h=>{
     const {E,P,hl,behind,ceyeAt,Wd,X,Y}=h,B=f.body,D=f.shade;
     behind(()=>{P([[28,34.6],[35.6,33.4],[40.6,28.4],[39.6,35.2],[31,37.8]],D);P([[28.6,35],[35.6,34],[40,29.8],[38.8,34.8],[31,37.2]],B);});
-    const [ew,eh]=eyeSize(s),ex=Math.round(X(14.6)-ew/2),ey=Math.round(Y(11)-eh/2);
-    ceyeAt(ex,ey,ew,eh,f.eye,B,0);ceyeAt(Wd-ex-ew,ey,ew,eh,f.eye,B,0);
+    const [ew,eh]=f.dark?aguDarkEye(s):eyeSize(s),ex=Math.round(X(f.dark?14.2:14.6)-ew/2),ey=Math.round(Y(f.dark?10.8:11)-eh/2);
+    ceyeAt(ex,ey,ew,eh,f.eye,B,0,f.dark);ceyeAt(Wd-ex-ew,ey,ew,eh,f.eye,B,0,f.dark);
   }},h=>{
     const {E,P,px,hl,ln}=h,B=f.body,D=f.shade;
     /* feet */
@@ -464,10 +473,16 @@ function front(f,lids=0){
     E(14.2,28.6,2.7,3.9,D,-.45);E(14.4,28.3,2.4,3.6,B,-.45);[[13.2,32.4],[14.6,32.8],[16,32.4]].forEach(([x,y])=>px(x,y,K));
     /* head: a big round head with Agumon's wide jaw */
     E(22,13.6,13.6,10.6,D);E(22,13.2,13.2,10.2,B);E(22,17.4,12.6,5.4,D);E(22,17,12.2,5,B);
+    if(f.dark){
+      /* the new Agumon face (Mylo's picture): no blush, two nostrils, a wide smile up into the cheeks with a little open mouth and a pink tongue */
+      px(19.2,15.2,OUT);
+      if(open){P([[12,15.6],[16.4,17.2],[22,17.6],[22,22.2],[17.8,21.6],[14,19]],MOUTH);E(22,20.8,4,1.5,TONGUE)}
+      else{ln([[10.8,15.2],[12.6,16.6],[15.6,17.9],[19.2,18.6]],OUT);P([[19,18.2],[22,18.4],[22,20.8],[20.2,20.4]],MOUTH);E(22,20.3,1.9,.8,TONGUE)}
+    }else{
     E(10.6,15.6,2.2,1.2,BLUSH);
     px(20.2,14.8,OUT);
     if(open){P([[12.6,16.2],[17,17],[22,17.2],[22,22],[18,21.4],[14.6,19.4]],MOUTH);E(22,20.6,4.4,1.5,TONGUE);[[15.4,17.4],[18.8,17.8]].forEach(([x,y])=>px(x,y,C.white))}
-    else{ln([[11.6,16.2],[13.8,17.6],[17.2,18.6],[22,19]],OUT);[[15.6,18.6],[19.6,19.4]].forEach(([x,y])=>px(x,y,C.white))}
+    else{ln([[11.6,16.2],[13.8,17.6],[17.2,18.6],[22,19]],OUT);[[15.6,18.6],[19.6,19.4]].forEach(([x,y])=>px(x,y,C.white))}}
   });
   cv.front=true;return cv;
 }
@@ -497,12 +512,16 @@ function quarter(f,lids=0){
     E(17.4,12.4,10.2,9.6,D);P(sn.map(([x,y])=>[x,y+.6]),D);P(jw.map(([x,y])=>[x,y+.5]),D);
     E(17.2,12,9.8,9.2,B);P(sn,B);P(jw,B);
     /* face: blush on the cheek, the one eye we can see, the nostril, and the mouth along the snout ending in a little smile, small teeth */
+    if(f.dark){const [ew,eh]=aguDarkEye(s*1.06);ceye(23.6,10,ew,eh,f.eye,B,1,1);px(36.6,11,OUT);
+      if(open){P([[36.6,16.9],[33,17.8],[27.2,18],[22.4,17.6],[20.4,16.2],[22.6,19.6],[27,21.6],[33.2,21.2],[35,19.6]],MOUTH);E(27.6,20.4,3.6,1.1,TONGUE)}
+      else{ln([[36.8,16.8],[33,17.6],[27.4,17.8],[23.4,17.6],[20.6,15.8]],OUT);P([[28.6,17.6],[33,17.4],[32.2,19.4],[29.6,19.6]],MOUTH);E(31,19.1,1.5,.6,TONGUE)}
+    }else{
     E(19.6,15,2.2,1.2,BLUSH);
     const [ew,eh]=eyeSize(s*1.12);ceye(23.4,9.4,ew,eh,f.eye,B,1);
     px(36.6,11,OUT);
     if(open){P([[36.6,16.9],[33,17.8],[27.2,18],[22.4,17.6],[20.4,16.2],[22.6,19.6],[27,21.6],[33.2,21.2],[35,19.6]],MOUTH);E(27.6,20.4,3.6,1.1,TONGUE);
       [[25.8,18.6],[29.6,18.8],[33.2,18.6]].forEach(([x,y])=>px(x,y,C.white))}
-    else{ln([[36.8,16.8],[33,17.6],[27.4,17.8],[23.4,17.6],[20.6,15.8]],OUT);[[25.8,18.6],[29.6,18.7],[33.2,18.5]].forEach(([x,y])=>px(x,y,C.white))}
+    else{ln([[36.8,16.8],[33,17.6],[27.4,17.8],[23.4,17.6],[20.6,15.8]],OUT);[[25.8,18.6],[29.6,18.7],[33.2,18.5]].forEach(([x,y])=>px(x,y,C.white))}}
   });
 }
 /* ---------- the evolved forms, drawn like the official art: big, strong and cool rather than chibi (front() and quarter() send forms 3-5 here) ----------
@@ -878,13 +897,13 @@ function cogbot(s){return build(22,26,s,{ax:11,fy:25.4,mx:17,my:8,top:0},h=>{con
 
 const BASE={body:C.orange,shade:C.orangeD,belly:C.belly,eye:C.green};
 const GREY={...BASE,stripes:'#1d62ad',helmet:'#6e4a2c',helmetD:'#3a2414',helmetL:'#8d6440',helmetMark:'#d42638',horn:'#86562f',hornD:'#4a2e18',hornTip:'#ece0c4',bands:'#d8322a',spikes:'#2e6fd0',claws:'#f4f6f8'};
-const FORM_SPR={2:{...BASE,s:1.15},
+const FORM_SPR={2:{...BASE,s:1.15,dark:1,eye:'#2fae8e'},
   3:{...GREY,s:1.35,evo:3,eye:'#ffb01a'},
   4:{...GREY,s:1.5,evo:4,eye:'#ffc21a',helmet:C.steel,helmetD:C.steelD,helmetL:'#e3e9f1',helmetMark:C.red,horn:C.steelD,hornD:'#4a5568',hornTip:C.white,bands:0,spikes:0,armor:C.steel,armorD:C.steelD,metalArm:1,bat:C.purple,batD:C.purpleD},
   5:{...BASE,body:'#f4952a',shade:'#b9630f',s:1.7,evo:5,helmet:'#d3dbe5',helmetD:'#7d8a9c',horn:'#ffd23a',hornD:'#a87204',hornTip:'#fff3b8',noseHorn:'#ffd23a',armor:'#ffd23a',armorD:'#a87204',armorM:'#e3ac22',
     helmetL:'#eef2f7',stripes:'#1d62ad',war:1,boots:1,claws:'#e8eef5',hair:'#e8452c',hairD:'#9e2219',shield:'#f7c233',shieldD:'#8a5a06',shieldMark:'#e8581c',shieldIn:'#5b5fb0',shieldInD:'#363a78'}};
 const SHADOW={body:'#5a4785',shade:'#33264f',belly:'#9c8cc4',eye:C.red,flame:'#b46bff',stripes:'#1f1733',helmet:'#6b6b80',helmetD:'#40404f',horn:'#e4e0f0',fangs:1};
-/* ---------- the eight partners: every Digivice has its own Digimon and its own evolution line ----------
+/* ---------- the nine partners: every Digivice has its own Digimon and its own evolution line ----------
    LINES holds what each partner is called, says and eats; LINE_ART (one line-*.js file each) holds how it looks.
    Art contract, for every line:
      scale:{home:[null,s1..s5],battle:[...],panel:[...]}  the s each form (1 baby .. 5 mega) is baked at on the home screen,
@@ -896,7 +915,7 @@ const SHADOW={body:'#5a4785',shade:'#33264f',belly:'#9c8cc4',eye:C.red,flame:'#b
    Names and attacks are matched from the biggest form down, so 'metal wolf claw' is found before 'wolf claw'. */
 const LINE_ART={};
 const LINE3D={}; // each line's 3D models for the 3D view and iPhone AR (m3d-<id>.js, built with ar.js's kit; Agumon's are in ar.js)
-const LINE_IDS=['agumon','gabumon','piyomon','tentomon','palmon','gomamon','patamon','gatomon'];
+const LINE_IDS=['agumon','gabumon','piyomon','tentomon','palmon','gomamon','patamon','gatomon','hackmon'];
 const LINES={
   agumon:{ray:'#f5b301',crest:'Courage',color:'#ff8a1f',rest:2,food:'meat',meal:'meat',fly:5,roar:'Roooar!',
     forms:[['Koromon','Bubble Blow',1100,'triangle'],['Agumon','Pepper Breath',820,'square'],['Greymon','Nova Blast',560,'square'],
@@ -953,9 +972,17 @@ const LINES={
     re:[/ nyaro ?m[ao]n/,/ sala ?m[ao]n|plot ?m[ao]n/,/ gato ?m[ao]n|tailmon/,/ angewo ?m[ao]n/,/ ophani ?m[ao]n/],
     atk:[/bubble/,/puppy|howl/,/lightning|cat punch/,/celestial/,/eden|javelin/],
     fav:{color:'yellow',food:'fish',animal:'cats'},
-    about:'proud, clever and cool like a cat, but very caring and brave. You love {o}, fish, sunny naps, and the shiny Holy Ring on your tail.'}};
-/* the eight Digivices, one per partner, in their crest colours. Friend codes carry a device's place in this list,
-   so the first four keep their old order (they were the four models before every Digivice got its own partner) */
+    about:'proud, clever and cool like a cat, but very caring and brave. You love {o}, fish, sunny naps, and the shiny Holy Ring on your tail.'},
+  /* the red Digivice's partner, from the picture of the Hackmon line Mylo sent (Jesmon X and GX would need a sixth stage, so the line stops at Jesmon) */
+  hackmon:{ray:'#ff5a3a',crest:'Justice',color:'#e8202a',rest:2,food:'pizza',meal:'pizza',fly:5,roar:'Rrraah! En garde!',
+    forms:[['Gigimon','Bubble Blow',1150,'triangle'],['Hackmon','Baby Flame',840,'square'],['BaoHackmon','Fifth Cross',560,'square'],
+      ['SaviorHackmon','Trident Saber',470,'sawtooth','Savior'],['Jesmon','Judgement of the Blade',500,'sawtooth']],
+    re:[/ gigi ?m[ao]n/,/ ha[ck]?k ?m[ao]n| huck ?m[ao]n/,/ ba[ou] ?(ha[ck]?k|huck)/,/ savio(u)?r ?(ha[ck]?k|huck)| savior/,/ jes ?m[ao]n/],
+    atk:[/bubble/,/baby flame|flame/,/fifth cross|fif cross|cross/,/trident|sab(er|re)/,/judg(e)?ment|blade|tekken|schwert/],
+    fav:{color:'red',food:'pizza',animal:'dragons'},
+    about:'brave, honest and noble, a little knight in training who always protects friends and plays fair. You wear a red cape you love. You love {o}, pizza, and training to be a hero.'}};
+/* the nine Digivices, one per partner, in their crest colours. Friend codes carry a device's place in this list,
+   so the first four keep their old order (they were the four models before every Digivice got its own partner) and new ones go at the end */
 const MODELS=[
   {id:'adventure',line:'gomamon',neon:'#29f0ff',neon2:'#1a7cff',shape:'22% / 13%'},
   {id:'d3',line:'agumon',neon:'#ff8a1f',neon2:'#ff3d00',shape:'44% 44% 40% 40% / 19% 19% 24% 24%'},
@@ -964,7 +991,8 @@ const MODELS=[
   {id:'friendship',line:'gabumon',neon:'#4d8dff',neon2:'#2446ff',shape:'36% 36% 24% 24% / 16% 16% 12% 12%'},
   {id:'love',line:'piyomon',neon:'#ff5a7a',neon2:'#e0123c',shape:'48% 48% 34% 34% / 22% 22% 16% 16%'},
   {id:'hope',line:'patamon',neon:'#ffd23a',neon2:'#ff9a1a',shape:'28% / 18%'},
-  {id:'light',line:'gatomon',neon:'#ff8ad8',neon2:'#e04cc0',shape:'46% 46% 50% 50% / 20% 20% 26% 26%'}];
+  {id:'light',line:'gatomon',neon:'#ff8ad8',neon2:'#e04cc0',shape:'46% 46% 50% 50% / 20% 20% 26% 26%'},
+  {id:'justice',line:'hackmon',neon:'#ff3030',neon2:'#c4001a',shape:'26% 26% 48% 48% / 12% 12% 28% 28%'}];
 const modelOf=line=>MODELS.find(m=>m.line===line)||MODELS[1];
 const lineOfModel=id=>(MODELS.find(m=>m.id===id)||{}).line;
 /* the treats and wins each rank needs before the next form can be earned (the same for every partner) */
@@ -4433,6 +4461,641 @@ LINE_ART.gatomon=(()=>{
     egg:PAL.purple
   };
 })();
+/* ---------- Hackmon line art (the red Digivice of Justice): Gigimon > Hackmon > BaoHackmon > SaviorHackmon > Jesmon ----------
+   Canon notes (official designs, the sheet Mylo sent and BRIEF-hackmon.md), matching the 3D models in m3d-hackmon.js:
+   Gigimon: a round red blob on four stubby feet, two big jagged bat-wing ears, big yellow eyes, a tiny fang, black triangle marks
+     on its sides, the white belly ring round its bottom and a short tail with a black tip. Cute: blush, a zigzag smile.
+   Hackmon: a little white armoured dragon crouching like a puppy: one tall horn sweeping up and back with a red front edge (a small
+     spike behind it), golden eyes framed by red marks, a red scarf and the big red cape flowing back in flame-like tufts, grey shading,
+     three white claws on each paw, a white tail. Cute: big head, big shiny eyes, blush.
+   BaoHackmon: a big four-legged white dragon beast built like a wolf: a white helmet with the tall horn grown big and spikes sweeping
+     back, sharp golden eyes, red marks, a red scarf and a huge mane of red flame strips streaming back over its body; gold claws on all
+     four feet, a blade on each hind leg, a sword-bladed tail, dark grey joints.
+   SaviorHackmon: a tall two-legged dragon knight covered in blades: white armour with gold trim, the horned helmet with red-lensed
+     goggles on its brow, golden eyes, a red scarf, the red crystal in its chest, a long red cape; crimson blades on both forearms and
+     the tail (Trident Saber); long legs that end in blade points; gold claws.
+   Jesmon: a Royal Knight in white armour trimmed with gold: a helmet with a gold V crest and swept-back horns, golden eyes, a red V
+     collar on the chest, big gold-rimmed shoulder plates, a long red cape; all its limbs are blades: a long red sword in its right
+     hand, a white blade on its left arm, a sword on its tail, blade-point legs. (Atho, Rene and Por are left out to keep it light.)
+   Shots: Baby Flame (a red-orange fireball), Fifth Cross (a red and white X slash), Trident Saber (three crimson crescents),
+     Judgement of the Blade (a big white-gold blade wave with a red edge). */
+LINE_ART.hackmon=(()=>{
+  const {round,max,min,ceil,cos,sin,PI,hypot}=Math;
+  const PAL={
+    gi:'#e8402a',giD:'#a8201a',giL:'#ff7a5a',ring:'#f4f6fb',ringD:'#b9c3d6',mark:'#2a1a1a',giEye:'#ffd23a',
+    wh:'#f4f6fb',whD:'#b9c3d6',whK:'#7d889e',
+    red:'#e8202a',redD:'#a3111c',redL:'#ff5a4a',crim:'#c4102a',
+    gold:'#ffcc33',goldD:'#c8870e',eye:'#ffc21a',gem:'#ff3b3b'};
+  const T=(pts,dx,dy)=>pts.map(([x,y])=>[x+dx,y+dy]);
+  /* pixel-exact drawing (the kit's aguP/aguE/aguBand): a pixel is filled when its centre is inside the shape, so white, red and
+     gold never blend into stray colours. oP/oE also draw a one-pixel dark rim round the shape to set it apart from what is behind */
+  function kitOf(h){
+    const P=(pts,c)=>aguP(h,pts,c),E=(x,y,rx,ry,c,r=0)=>aguE(h,x,y,rx,ry,c,r),
+      B=(pts,w0,w1,c,t0=0,t1=1,dx=0,dy=0)=>aguBand(h,pts,w0,w1,c,t0,t1,dx,dy),d=1/h.s,
+      oP=(pts,c)=>{for(const [a,b] of [[d,0],[-d,0],[0,d],[0,-d]])P(T(pts,a,b),OUT);P(pts,c)},
+      oE=(x,y,rx,ry,c,r=0)=>{E(x,y,rx+d,ry+d,OUT,r);E(x,y,rx,ry,c,r)},
+      oB=(pts,w0,w1,c,t0=0,t1=1)=>{B(pts,w0+d,w1+d,OUT,t0,t1);B(pts,w0,w1,c,t0,t1)},
+      px=(x,y,c)=>aguPx(h,round(h.X(x)),round(h.Y(y)),c);
+    return {P,E,B,oP,oE,oB,px,d,path:aguPath};
+  }
+
+  /* a small symmetric pixel pattern on the centre line of a front view (a mouth): rows give the half from the middle outward,
+     one char per block of about s pixels; c maps the chars to colours */
+  function midPx(h,y,rows,c){const n=max(1,round(h.s*.95)),Wd=h.Wd,cL=Math.floor((Wd-n)/2),cR=Wd-n-cL,y0=round(h.Y(y));
+    rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(c[ch])for(let a=0;a<n;a++)for(let b=0;b<n;b++){aguPx(h,cL-i*n+a,y0+j*n+b,c[ch]);aguPx(h,cR+i*n+a,y0+j*n+b,c[ch])}}))}
+  /* a big shiny cute eye: ceyeAt records it and draws the shut and happy eyes; open, it is repainted with a big coloured iris,
+     a round black pupil and a white shine (two on big eyes) */
+  function bigEye(h,ex,ey,w,hh,iris,bg,dir,lids){
+    h.ceyeAt(ex,ey,w,hh,iris,bg,dir);if(lids===1||lids===2)return;
+    const row=(j,W,H)=>{const t=(j+.5)/H*2-1;return round(W/2*(1-Math.sqrt(max(0,1-t*t))))},
+      oval=(x0,y0,W,H,c)=>{for(let j=0;j<H;j++){const i=row(j,W,H);for(let x=x0+i;x<x0+W-i;x++)aguPx(h,x,y0+j,c)}};
+    const iw=w-2,ih=hh-2;oval(ex+1,ey+1,iw,ih,iris);
+    const pw=max(1,round(iw*.6)),ph=max(2,round(ih*.62)),p0=ex+1+max(0,min(iw-pw,round((iw-pw)/2+dir*iw*.14))),q0=ey+1+round((ih-ph)/2+ih*.06);
+    oval(p0,q0,pw,ph,OUT);
+    aguPx(h,p0,q0,C.white);if(pw>=3)aguPx(h,p0+1,q0,C.white);if(ph>=4)aguPx(h,p0,q0+1,C.white);
+    if(pw>=3&&ph>=4)aguPx(h,p0+pw-1,q0+ph-2,C.white)}
+
+  /* ---------- 1. Gigimon: a round red blob on four stubby legs, big jagged bat-wing ears, yellow eyes, one tiny fang,
+     black triangle marks, the white belly ring and a short black-tipped tail ---------- */
+  const GR=PAL.gi,GD=PAL.giD;
+  /* one jagged bat-wing ear, its root at the top of the head and its tip up and out (sg -1 out to the left, 1 to the right) */
+  const gigiEar=(x,sg)=>[[x,9.6],[x+sg*1.6,5.6],[x+sg*3.6,.6],[x+sg*4.6,3],[x+sg*7.4,2.6],[x+sg*6.2,5.2],[x+sg*8.2,6.4],[x+sg*5.6,8],[x+sg*5,10.6]];
+  function gigiFront(lids,s){
+    const open=lids>=2,cx=ceil(24*s)/(2*s);
+    return build(24,22,s,{ax:cx,fy:20.8,mx:cx,my:open?16.4:16,top:.6,lids,mirror:1,after:h=>{
+      const {B}=kitOf(h);
+      /* the short tail peeks out low on one side, its black tip curling up */
+      h.behind(()=>{const t=aguPath([[cx+6,18.4],[cx+9,17.8],[cx+10.8,15.8],[cx+11.4,13]]);
+        B(t,1.9,.7,PAL.mark,.6,1);B(t,1.9,.7,GR,0,.6);B(t,2.4,1.2,OUT,0,1)});
+      const ew=max(3,round(5*s)),eh=max(4,round(6*s)),ex=round(h.X(cx-3.6)-ew/2),ey=round(h.Y(12.4)-eh/2);
+      bigEye(h,ex,ey,ew,eh,PAL.giEye,GR,0,lids);bigEye(h,h.Wd-ex-ew,ey,ew,eh,PAL.giEye,GR,0,lids);
+      /* the one tiny fang */
+      const n=max(1,round(h.s*.95)),fx=Math.floor((h.Wd-n)/2)-2*n,fy=round(h.Y(15.6))+n;
+      for(let a=0;a<n;a++)for(let b=0;b<n*(s>=1.8?2:1);b++)aguPx(h,fx+a,fy+b,C.white)}},h=>{
+      const {P,E}=kitOf(h);
+      /* the big jagged bat-wing ear (the left one; the build mirrors it) */
+      const ear=gigiEar(cx-3.2,-1);P(T(ear,.3,.5),GD);P(ear,GR);P([[cx-4,9.4],[cx-5.2,5.6],[cx-6.8,2.6],[cx-7.2,5.6],[cx-6.8,8.6]],GD);
+      /* the round body, the white belly ring round its bottom, the stubby feet */
+      E(cx+.2,14,8.8,7.2,GD);E(cx,13.6,8.6,7,GR);E(cx-4.2,9.4,2.6,1.4,PAL.giL);
+      E(cx,19.4,6.4,1.4,PAL.ringD);E(cx,19,6.4,1.1,PAL.ring);
+      E(cx-5.2,20.2,2,1.1,GD);E(cx-5.2,19.9,1.7,.9,GR);
+      /* the black triangle mark on each side, blush */
+      P([[cx-8.8,14.6],[cx-7,12.6],[cx-7.2,16.4]],PAL.mark);
+      E(cx-5.6,15.8,1.4,.8,BLUSH);
+      /* the mouth: a little zigzag, or open and laughing */
+      if(open)midPx(h,15.2,['kkk','ttk','tk'],{k:OUT,t:TONGUE});
+      else midPx(h,15.8,['k..k','.kk'],{k:OUT});
+    })}
+  function gigiSide(lids,s){
+    const open=lids>=2;
+    return build(24,22,s,{ax:11.6,fy:20.8,mx:20,my:open?16.2:15.6,top:.6,lids},h=>{
+      const {P,E,B,px}=kitOf(h);
+      /* the short tail behind, curling up, with its black tip */
+      const t=aguPath([[5.4,13.4],[2.4,11.6],[.9,8.6],[1.4,5]]);B(t,2.2,1.2,OUT);B(t,1.6,.7,GR,0,.66);B(t,1.6,.7,PAL.mark,.66,1);B(t,.6,.3,GD,.1,.6,.5,.4);
+      const ear=[[13.4,9.2],[12,5.2],[10.4,.6],[9.2,3],[6.8,2.4],[7.6,5],[5.6,6],[7.6,7.8],[8.4,10.4]];
+      /* far feet, the round body, the belly ring round its bottom */
+      E(9.2,20,1.8,1.1,GD);E(16.4,20,1.8,1.1,GD);
+      E(12,14,8.8,7.2,GD);E(11.8,13.6,8.6,7,GR);E(9.6,9.4,2.6,1.4,PAL.giL);
+      E(12,19.4,6.8,1.4,PAL.ringD);E(12,19,6.8,1.1,PAL.ring);
+      E(7.6,20.2,1.9,1.1,GD);E(7.6,19.9,1.6,.9,GR);E(15,20.2,1.9,1.1,GD);E(15,19.9,1.6,.9,GR);
+      /* the big jagged ear, standing up and back (the far one hides behind it) */
+      P(T(ear,.3,.5),GD);P(ear,GR);P([[12,9],[10.8,5.4],[9.6,3],[9.2,5.6],[9.6,9]],GD);
+      /* the black triangle mark on its side, blush, the mouth and its tiny fang */
+      P([[4.4,14.6],[7.4,12.6],[7.2,16.4]],PAL.mark);
+      E(16.8,15.8,1.3,.8,BLUSH);
+      if(open){P([[20.6,14.2],[17.8,15],[18.4,17.6],[20.2,17.2]],MOUTH);px(19.4,16.8,TONGUE);px(18.6,15.2,C.white)}
+      else{px(20.4,14.8,OUT);px(19.4,15.4,OUT);px(18.4,15.4,OUT);px(17.6,15,OUT);px(18.4,16.4,C.white)}
+      const ew=max(3,round(5*s)),eh=max(4,round(6*s));bigEye(h,round(h.X(16.4)-ew/2),round(h.Y(12)-eh/2),ew,eh,PAL.giEye,GR,1,lids);
+    })}
+
+  /* ---------- 2. Hackmon: a little white dragon crouching on all fours like a puppy: a white armoured head with one tall horn
+     sweeping up and back, red marks round the eyes, golden eyes, a red scarf and the big red cape flowing back
+     over its body in flame-like tufts, white legs with grey shading and three white claws on each paw, a white tail ---------- */
+  const W=PAL.wh,WD=PAL.whD,WK=PAL.whK,RE=PAL.red,RD=PAL.redD,RL=PAL.redL;
+  /* outlines first, then fills, so parts drawn together read as one piece */
+  function solid(k,parts){for(const [f,...a] of parts){if(f==='E'){const [x,y,rx,ry]=a;k.E(x,y,rx+k.d,ry+k.d,OUT)}else for(const [dx,dy] of [[k.d,0],[-k.d,0],[0,k.d],[0,-k.d]])k.P(T(a[0],dx,dy),OUT)}
+    for(const [f,...a] of parts){if(f==='E')k.E(...a);else k.P(a[0],a[1])}}
+  /* the cape's flame tufts: each a smooth band from its root to a point, shaded dark below and light along the top; a filler
+     polygon joins their roots into one cape */
+  function cape(k,tufts,fill){const ps=tufts.map(([pts,w])=>[aguPath(pts,4),w]);
+    for(const [p,w] of ps)k.B(p,w+k.d,.3+k.d,OUT);if(fill)for(const [dx,dy] of [[k.d,0],[-k.d,0],[0,k.d],[0,-k.d]])k.P(T(fill,dx,dy),OUT);
+    for(const [p,w] of ps)k.B(p,w,.15,RD);if(fill)k.P(fill,RE);
+    for(const [p,w] of ps)k.B(p,w*.72,.1,RE,0,.96,0,-w*.26);
+    for(const [p,w] of ps)k.B(p,w*.22,.1,RL,.06,.72,0,-w*.56)}
+  function hackSide(lids,s){
+    const open=lids>=2;
+    return build(56,46,s,{ax:26,fy:45,mx:51,my:open?27:26,top:3,lids},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the far legs, in shade */
+      oP([[15.4,42.4],[20.6,42.4],[22.6,44],[22.6,45],[15,45]],WD);
+      oP([[32.4,36],[36,36],[37.6,41.6],[39.4,43],[39.4,45],[33.4,45],[33,41]],WD);
+      /* the little white tail, up and out behind */
+      const tl=aguPath([[15.4,36.6],[11,35.2],[7.4,32.4],[5.2,28.6]]);B(tl,2.9,.6,OUT);B(tl,2.5,.35,WD,0,1,.3,.5);B(tl,2.3,.25,W);
+      /* body: round and low, crouched */
+      solid(k,[['E',26.4,35.6,11.4,5.6,W]]);E(27.4,39.2,8.6,1.8,WD);
+      /* the near hind leg folded under: the round haunch and the foot with three white claws */
+      solid(k,[['E',19.6,37.2,5.6,4.8,W],['E',19.8,43.2,5.4,2,W]]);
+      P([[14.6,44.1],[25,44.1],[24.6,45.1],[15,45.1]],WD);P([[14.6,38],[15.6,41.6],[14.4,41.4]],WD);
+      B([[21.4,42.6],[21.8,45]],.3,.3,WK);B([[23.4,42.8],[23.8,45]],.3,.3,WK);
+      /* the cape: a hood over the back of the head, flowing back over the body in long flame-like strands */
+      cape(k,[[[[31.6,14],[26,10.6],[19.6,8.6],[13,8.2],[8.4,5.6]],5.2],[[[31,20.4],[24,18.8],[15,18],[7,17.2],[1.8,14]],6],
+        [[[31,26.4],[24,27.8],[15,29],[8,28.4],[3.2,25.6]],5]],[[33.6,27.6],[29.6,20],[31,13.4],[24,14],[16,22],[15,30],[21,31.6],[28,31.4],[32,29.8]]);
+      /* the near front leg, reaching forward a little, grey on its back edge; a round paw with three white claws */
+      solid(k,[['P',[[33.2,32.4],[38.6,33],[40.4,38.4],[41,42.2],[35.8,42.6],[34.4,38.4]],W],['E',39.8,43.2,4.6,2,W]]);
+      P([[33.4,33.6],[35,33.8],[36.6,42.4],[35.8,42.6],[34.4,38.4]],WD);P([[35.4,44.1],[44.2,44.1],[43.8,45.1],[35.6,45.1]],WD);
+      B([[40.8,42.8],[41.2,45]],.3,.3,WK);B([[42.8,42.6],[43.4,44.6]],.3,.3,WK);
+      /* the red scarf round the neck */
+      oP([[30.6,25.6],[36.4,27.8],[39.6,30.6],[36.2,33],[30.2,31]],RE);P([[30.6,30.2],[36.2,32],[39,31.2],[36.2,33],[30.2,31]],RD);P([[32,26.8],[36.2,28.4],[38.4,30.2],[35.8,29]],RL);
+      /* the head: the big round white armoured skull, the short rounded snout and the little jaw */
+      const jw=open?[[38.6,26],[48.4,27.4],[47.8,30.4],[43.6,31.8],[39.4,31],[36.8,28.4]]:[[38.4,25.6],[49.2,25.8],[48,28],[44,29.2],[39.6,29],[36.8,27.6]];
+      solid(k,[['E',37,20,9.8,9,W],['E',45.4,20.8,6.8,5.4,W],['P',jw,W]]);
+      P(open?[[39.4,29.8],[43.6,30.6],[47.8,29.6],[47.8,30.4],[43.6,31.8],[39.4,31]]:[[39.4,28.2],[44,28.2],[48,27.2],[48,28],[44,29.2],[39.6,29]],WD);
+      P([[28,22],[29.6,26.6],[33.4,28.8],[30,28]],WD);
+      /* the armour's seam between the skull and the snout plate */
+      B(aguPath([[41.2,14.6],[40.4,17],[40.8,19.4]]),.35,.25,WD);
+      if(open){P([[51.4,24],[48,26],[41,26.4],[38.6,26.4],[40,28.6],[44.6,29.4],[48.6,28.2]],MOUTH);E(44.6,28.8,2.8,.9,TONGUE);px(48.6,26.4,C.white)}
+      else{B([[51.6,24],[49.4,25.4],[46.6,25.8]],.5,.5,OUT);px(48.4,26.4,C.white)}
+      px(50.8,19.6,OUT);
+      /* the small spike behind, and the tall horn sweeping up and back from the top of the head with its red front edge */
+      const sp=aguPath([[34.6,14.4],[31.8,10.8],[28.6,9.4]]);B(sp,2.2,.3,OUT);B(sp,1.6,.2,W);B(sp,.6,.1,RE,.2,.8,.3,-.5);
+      const hn=aguPath([[40,13],[37,8],[32.8,3.4],[28.2,.4]]);B(hn,4.8,.35,OUT);B(hn,4.1,.2,W);B(hn,1.6,.1,WD,.12,1,-1.3,1.1);
+      B(hn,1,.1,RE,.1,.78,1.2,-1);
+      /* red marks round the eye: a curve from over it round its back edge down to the cheek; a little blush */
+      B(aguPath([[45.6,14.4],[41.6,13.6],[37.8,15],[36.4,18.4],[37,21.6]]),.8,.3,RE);
+      E(45.4,25,1.6,.8,BLUSH);
+      const [ew,eh]=eyeSize(s*1.42);bigEye(h,round(h.X(42)-ew/2),round(h.Y(19.6)-eh/2),ew,eh,PAL.eye,W,1,lids);
+    })}
+  function hackFront(lids,s){
+    const open=lids>=2,cx=ceil(48*s)/(2*s);
+    const cv=build(48,46,s,{ax:cx,fy:45,mx:cx,my:open?29:28.2,top:3,lids,mirror:1,after:h=>{
+      const k=kitOf(h);
+      h.behind(()=>{const tl=aguPath([[cx+8,41.8],[cx+12,41],[cx+15.6,38.6],[cx+17.8,35]]);k.B(tl,2.2,.2,W);k.B(tl,2.6,.4,WD,0,1,0,.6);k.B(tl,3,.7,OUT,0,1,0,.3)});
+      const [ew,eh]=eyeSize(s*1.36),ex=round(h.X(cx-5.8)-ew/2),ey=round(h.Y(19.6)-eh/2);
+      bigEye(h,ex,ey,ew,eh,PAL.eye,W,0,lids);bigEye(h,h.Wd-ex-ew,ey,ew,eh,PAL.eye,W,0,lids)}},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the cape behind: the hood round the back of the head, its long strands flowing out and down on both sides */
+      cape(k,[[[[cx-9,22],[cx-15,22],[cx-19.6,19.6],[cx-23,15.4]],5],[[[cx-8,30],[cx-14,32.6],[cx-19,33.6],[cx-23,31.4]],4.8]],
+        [[cx+1.2,8.4],[cx-6,9],[cx-11,12.4],[cx-13.4,18],[cx-13.4,30],[cx-9,36],[cx+1.2,36]]);
+      /* the hind legs at the sides with their paws; the round body */
+      solid(k,[['E',cx-11,42.8,4.4,2.2,W],['E',cx,36.6,9.6,6.6,W]]);P([[cx-14.6,44.1],[cx-7.4,44.1],[cx-7.8,45.1],[cx-14.4,45.1]],WD);
+      B([[cx-13.4,43],[cx-14,45]],.3,.3,WK);B([[cx-11.2,43.2],[cx-11.4,45]],.3,.3,WK);
+      E(cx,40.8,6,2.4,WD);
+      /* front legs, grey down the outer side; round paws with three white claws */
+      solid(k,[['P',[[cx-8.2,34.4],[cx-2.8,34.4],[cx-2.8,41.8],[cx-8,41.8]],W],['E',cx-5.4,43.2,4.2,2,W]]);
+      P([[cx-8.2,34.4],[cx-6.8,34.4],[cx-6.6,41.8],[cx-8,41.8]],WD);P([[cx-9.2,44.1],[cx-1.6,44.1],[cx-1.8,45.1],[cx-9,45.1]],WD);
+      B([[cx-6.8,42.8],[cx-6.8,45]],.3,.3,WK);B([[cx-4.2,42.8],[cx-4.2,45]],.3,.3,WK);
+      /* the red scarf */
+      oP([[cx+1.2,27.4],[cx-8.2,26.4],[cx-10.6,29.4],[cx-6.4,32.2],[cx+1.2,32.6]],RE);P([[cx-9.8,30],[cx-6.4,32.2],[cx+1.2,32.6],[cx+1.2,31.4],[cx-6.2,31.2]],RD);
+      P([[cx-8,27.4],[cx-4,27.6],[cx-6.4,29]],RL);
+      /* the small spikes at the sides, and the tall horn on top with its red front edge */
+      const sp=aguPath([[cx-7.6,12.6],[cx-10,8.6],[cx-11.2,6.4]]);B(sp,2,.3,OUT);B(sp,1.4,.2,W);
+      P([[cx-4.2,12.6],[cx-.6,.2],[cx+1.2,.2],[cx+1.2,12.6]],OUT);P([[cx-3.4,12.2],[cx-.2,1.4],[cx+1.2,1.4],[cx+1.2,12.2]],W);P([[cx-3.4,12.2],[cx-1.6,5.4],[cx-.8,12.2]],WD);
+      P([[cx-.6,11.4],[cx-.2,3.4],[cx+1.2,2.4],[cx+1.2,11.4]],RE);
+      /* the big round head: white armour, the rounded snout facing you */
+      solid(k,[['E',cx,19,12,9.6,W]]);E(cx,25.4,7.2,3.8,WD);E(cx,24.9,7,3.5,W);
+      px(cx-1.8,23.2,OUT);
+      if(open)midPx(h,26,['kkk','tkk','tk'],{k:OUT,t:TONGUE});else midPx(h,26.6,['kk.','..k'],{k:OUT});
+      /* red marks round the eyes, running out and back, and on the cheeks */
+      B(aguPath([[cx-3.4,14.6],[cx-7,13.8],[cx-10.4,15.4],[cx-11.6,19.2],[cx-10.8,22.8],[cx-9,25]]),.85,.35,RE);
+      E(cx-5.6,25,1.6,.8,BLUSH);
+    });
+    cv.front=true;return cv}
+
+  /* ---------- the evolved forms (3-5), drawn like the official art: canon proportions, small sharp golden eyes under a brow or
+     helmet edge, fangs, gold claws, every blade and horn ---------- */
+  const GO=PAL.gold,GOD=PAL.goldD,WJ='#4c566b',CR=PAL.crim,CRD='#7c0a1c',CRL='#f0566a';
+  /* a sharp canon eye centred on (x,y) units: the kit's small eye with its brow edge; dir 1 looks right, -1 left */
+  function sEye(h,x,y,lids,dir,k=1,lid=W){const [ew,eh]=aguEyeWH(h.s*k),ex=round(h.X(x)-ew/2),ey=round(h.Y(y)-eh/2);
+    aguEye(h,ex,ey,ew,eh,PAL.eye,lid,dir,dir,OUT,lids);return [ex,ey,ew,eh]}
+  /* a pointed blade from (x0,y0) to the tip (x1,y1), w wide at its widest, with a darker bevel along one side */
+  function bladeP(x0,y0,x1,y1,w,at=.3){const dx=x1-x0,dy=y1-y0,l=hypot(dx,dy),nx=-dy/l,ny=dx/l,p=(t,o)=>[x0+dx*t+nx*o,y0+dy*t+ny*o];
+    return {all:[p(0,w*.42),p(at,w/2),p(1,0),p(at,-w/2),p(0,-w*.42)],half:[p(0,0),p(at,0),p(1,0),p(at,-w/2),p(0,-w*.42)]}}
+  function blade(k,x0,y0,x1,y1,w,c,cd,at){const b=bladeP(x0,y0,x1,y1,w,at);k.oP(b.all,c);k.P(b.half,cd)}
+  /* a gold claw along a little curve */
+  const gclaw=(h,pts,w)=>aguDinoKit(h,{}).claw(pts,w,GO,GOD);
+
+  /* a flame-shaped strip along a smooth path through pts: w wide a third of the way along, narrowing to a sharp point at the end.
+     k narrows it and o moves it toward its upper edge (as fractions of the half width there); t0..t1 keeps only that part of it */
+  function flameP(pts,w,k=1,o=0,t0=0,t1=1){
+    const p=aguPath(pts,6),n=p.length,L=[0];for(let i=1;i<n;i++)L.push(L[i-1]+hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));
+    const sg=p[n-1][0]<p[0][0]?1:-1,A=[],Bs=[];
+    for(let i=0;i<n;i++){const t=L[i]/L[n-1];if(t<t0-1e-6||t>t1+1e-6)continue;
+      const a=p[max(0,i-1)],b=p[min(n-1,i+1)],ux=b[0]-a[0],uy=b[1]-a[1],l=hypot(ux,uy)||1,nx=-sg*uy/l,ny=sg*ux/l;
+      const pr=t<.3?.7+.3*sin(t/.3*PI/2):cos((t-.3)/.7*PI/2)**.8,hw=w/2*pr,x=p[i][0]+nx*hw*o,y=p[i][1]+ny*hw*o;
+      A.push([x+nx*hw*k,y+ny*hw*k]);Bs.push([x-nx*hw*k,y-ny*hw*k])}
+    return [...A,...Bs.reverse()]}
+  /* the mane or cape: flame strips drawn from the back one to the front one, each with a dark rim, a dark red underside, red, and a
+     light red streak along its top edge */
+  function flames(k,list){for(const [pts,w] of list){const f=(kk,o,t0,t1)=>flameP(pts,w,kk,o,t0,t1);
+    k.oP(f(1,0),RD);k.P(f(.66,.34),RE);k.P(f(.2,.66,.06,.66),RL)}}
+
+  /* ---------- 3. BaoHackmon: a big four-legged white dragon beast built like a wolf or a lion: a white horned helmet with sharp
+     horns sweeping back, golden eyes, a red scarf and a huge red mane of cape strips streaming back over the body; gold claws on
+     all four feet, blades on the hind legs and a bladed tail ---------- */
+  function baoSide(lids,s){
+    const open=lids>=2;
+    return build(92,64,s,{ax:48,fy:63,mx:90,my:open?33.4:31.6,top:1,lids},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the bladed tail, out behind and low */
+      const tl=aguPath([[25,43],[18,43.8],[11.6,46.4],[7,50]]);B(tl,3.7,1.5,OUT);B(tl,3.1,1,WD);B(tl,2.3,.6,W,0,1,0,-.5);
+      blade(k,8.4,49,.8,55.6,4.8,W,WD,.35);
+      /* the far legs, in shade, with gold claws */
+      oP([[26.6,47],[33,47],[32.4,53],[34,58.8],[35.4,61],[28.2,61],[27,54]],WD);
+      gclaw(h,[[34.2,60],[36.4,60.6],[37.4,62.2]],.8);gclaw(h,[[31.8,60.6],[33.4,61.6],[33.8,62.6]],.7);
+      oP([[62.6,45],[68.6,45],[71.6,52.6],[74,59.4],[67.4,60.4],[64.6,53]],WD);
+      gclaw(h,[[73,59],[75.4,59.8],[76.2,61.8]],.8);gclaw(h,[[70.2,60],[72,61],[72.4,62.4]],.7);
+      /* the body: a deep chest, a narrower waist, strong haunches, armour seams */
+      oP([[22,40],[28,35.6],[42,35],[56,34.6],[66,35.4],[73,38.6],[76.6,44],[74.6,50],[67,52.4],[57,50.6],[46,49.4],[36,50],[28,50.6],[22,47]],W);
+      P([[36,48.4],[46,47.8],[57,49.2],[67,51],[67,52.4],[57,50.6],[46,49.4],[36,50]],WD);
+      B([[46,38.6],[45.4,42.6],[46,46.4]],.3,.3,WD);B([[55.6,38],[55,42.4],[55.8,47.4]],.3,.3,WD);
+      /* the near hind leg: an armoured thigh, the hock bent back with its blade, a long foot with big gold claws */
+      oE(30,43.6,8.6,8,W);P([[22.4,46],[26,50.4],[34,50.6],[38,47.4],[34,49.4],[26.4,49.2]],WD);
+      blade(k,25.6,54.6,11.4,49.6,4.6,W,WD,.3);
+      oP([[23.6,47.4],[35,47.2],[31,53.4],[30.4,56],[34,58],[37.6,58.4],[37.8,61.4],[25.4,61.4],[21.8,54.4]],W);
+      P([[21.8,54.4],[25.4,61.4],[27.8,61.4],[24.8,54.8]],WD);E(25,54.8,2.2,1.9,WJ);
+      gclaw(h,[[34.4,58.8],[37.2,59.4],[38.6,61.6]],1);gclaw(h,[[36.4,58],[39.2,58.6],[40.8,60.8]],1);gclaw(h,[[31.4,60],[33,60.8],[33.6,62.4]],.8);
+      /* the strong neck */
+      oP([[63,36],[67,29],[72,25],[78,26],[79,33],[75,40],[68,43]],W);
+      /* the huge red mane: four great flame strips streaming back from the head over the back, their tips flicking up */
+      flames(k,[[[[72,23.6],[63,16.4],[53,12],[43,10.8],[33,10.4],[25,7.6],[20.6,3.4]],7.6],
+        [[[71.4,26],[61,21.4],[48,19],[34,20],[20,19.6],[10,16.4],[4.6,11]],9.4],
+        [[[70.4,30],[60,28.6],[46,28],[32,29.6],[19,30.2],[9,28],[3.4,23]],9],
+        [[[69.4,34],[58,35.6],[46,36.6],[35,38.2],[25,38.6],[17,36.6],[12.6,32.6]],6.8]]);
+      /* the near front leg: a big armoured shoulder, the foreleg reaching down and forward, a paw with big gold claws */
+      oE(67.6,42.4,7.4,7.2,W);P([[60.6,44.6],[63.2,47.6],[71.2,48.6],[74.8,45],[71.2,47.2],[63.6,46.4]],WD);
+      oP([[62,46.4],[72.4,45.8],[75,52],[77.4,58.4],[68,59.4],[64.6,52.6]],W);P([[62,46.4],[64.2,46.4],[69.8,59.2],[68,59.4],[64.6,52.6]],WD);
+      E(71,53,2.4,1.8,WJ);
+      oE(73.4,60,5.8,2.4,W);P([[67.8,61.2],[78.6,61.2],[78.2,62.4],[68.2,62.4]],WD);
+      gclaw(h,[[77.8,58.6],[80.8,59.2],[82.2,61.6]],1.05);gclaw(h,[[78.6,60.4],[81.2,61.2],[81.8,62.8]],.95);gclaw(h,[[75,60.8],[76.6,61.8],[77,63]],.8);
+      /* the red scarf round the neck, one end flying back */
+      flames(k,[[[[68.6,37.6],[61.6,40],[54,39.6]],4.2]]);
+      oP([[70.2,31.6],[79.4,33],[80,37.8],[74,40.8],[67.6,38.8]],RE);P([[67.6,37.6],[74,39.6],[79.8,36.8],[80,37.8],[74,40.8],[67.6,38.8]],RD);
+      P([[71.4,32.8],[78.2,33.8],[74.2,35.2]],RL);
+      /* the head: an angular white helmet over the skull and the long muzzle, a sharp brow over the eye; the jaw with fangs drops
+         open for the grin */
+      const hg=[77,31.8],an=open?.32:0,rot=([x,y])=>[hg[0]+(x-hg[0])*cos(an)-(y-hg[1])*sin(an),hg[1]+(x-hg[0])*sin(an)+(y-hg[1])*cos(an)];
+      const jaw=[[75.6,31.6],[89.6,31.2],[89,33.2],[84.4,35.2],[78.6,35.6],[74.8,34]].map(rot);
+      oP(jaw,W);P([[78.6,34.4],[84.4,34],[88.8,32.6],[89,33.2],[84.4,35.2],[78.6,35.6]].map(rot),WD);
+      if(open){P([[76.4,31.8],[90,31.4],...[[89.8,31.6],[76.4,32]].map(rot)],MOUTH);aguTeeth(h,[[81.6,32],[85.6,31.8]].map(rot),-1,W)}
+      const sk=[[70.6,27.4],[72.4,22.4],[77,19.8],[82.6,19.6],[86.6,21.2],[85.8,22.6],[88.6,24.4],[92.4,28],[92.8,30],[91.4,31.2],[85,31.8],[77,32.6],[72.6,31.6]];
+      oP(sk,W);P([[72.6,31.6],[77,32.6],[85,31.8],[91.4,31.2],[92.4,30.4],[90.6,32.2],[85,32.8],[77,33.4]],WD);
+      P([[76.4,21.8],[82.6,21.4],[86.2,21.4],[85.8,22.6],[82.4,22.8],[78,23.4]],WD);
+      aguTeeth(h,[[84,32],[88.2,31.6]],1,W);
+      px(91,28.4,OUT);
+      /* the horns: the big one from the crown sweeping up and back with a red front edge (Hackmon's horn, grown), two shorter
+         spikes behind it */
+      const h3=aguPath([[72.6,27],[67,26.4],[62,27.2]]);B(h3,2.4,.3,OUT);B(h3,1.8,.2,W);
+      const h2=aguPath([[74.4,22.8],[68.6,18.4],[61.4,15.8]]);B(h2,3.2,.3,OUT);B(h2,2.6,.2,W);B(h2,1,.1,WD,.1,1,.3,1);
+      const h1=aguPath([[79.4,21],[76.2,13.6],[72,7],[66,1.6]]);B(h1,4.6,.3,OUT);B(h1,3.9,.2,W);B(h1,1.5,.1,WD,.1,1,-1.4,.9);
+      B(h1,.85,.1,RE,.06,.82,1.3,-.6);
+      /* red marks on the helmet: a stripe over the eye running back, one along the cheek; the sharp golden eye under the brow */
+      B(aguPath([[79.8,23.2],[76.6,23.4],[73.4,25]]),.75,.45,RE);
+      B(aguPath([[80.2,27.8],[77,28.4],[73.6,27.6]]),.7,.4,RE);
+      sEye(h,82.6,25,lids,1,1.3);
+    })}
+  function baoFront(lids,s){
+    const open=lids>=2,cx=ceil(66*s)/(2*s);
+    const cv=build(66,64,s,{ax:cx,fy:63,mx:cx,my:open?34:33,top:1,lids,mirror:1,after:h=>{
+      const k=kitOf(h);
+      /* the bladed tail peeks out behind one hind leg */
+      h.behind(()=>{const b=bladeP(cx+19,57,cx+27.4,59.6,4.2,.35);k.P(b.half,WD);k.P(b.all,W);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])k.P(T(b.all,dx/s,dy/s),OUT);
+        const tl=aguPath([[cx+12,55.4],[cx+16,56.6],[cx+20,57.4]]);k.B(tl,2.4,1.4,W);k.B(tl,3,1.9,OUT)});
+      const [ew,eh]=aguEyeWH(h.s*1.3),ex=round(h.X(cx-5.8)-ew/2),ey=round(h.Y(25)-eh/2);
+      aguEye(h,ex,ey,ew,eh,PAL.eye,W,1,1,OUT,lids);aguEye(h,h.Wd-ex-ew,ey,ew,eh,PAL.eye,W,-1,-1,OUT,lids)}},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the huge mane flares out round the head and shoulders */
+      flames(k,[[[[cx-5,24],[cx-10,15.4],[cx-15.6,9.6],[cx-21,7],[cx-25,3.6]],7],[[[cx-6,28],[cx-15,23.4],[cx-23,21.4],[cx-29,19.6],[cx-32,15.6]],8.4],
+        [[[cx-7,32],[cx-16,32.6],[cx-24,34],[cx-29.4,34],[cx-32.4,30.4]],8],[[[cx-7,37],[cx-13,41],[cx-18,45.6],[cx-22.4,48],[cx-26,46]],6.4]]);
+      /* the hind legs at the sides, their hock blades and gold claws */
+      blade(k,cx-17.8,54.6,cx-27.4,51.4,4.2,W,WD,.3);
+      oE(cx-15.6,50.6,5.4,5.6,W);oP([[cx-19.6,52],[cx-11.8,52],[cx-12.4,60],[cx-19.2,60]],W);P([[cx-19.6,52],[cx-17.8,52],[cx-17.4,60],[cx-19.2,60]],WD);
+      oE(cx-15.6,61,4.4,2,W);for(const x of [cx-18.2,cx-15.6,cx-13])gclaw(h,[[x,61],[x-.2,62.2],[x-.6,63.2]],.7);
+      /* the body behind the chest */
+      oE(cx,47.4,13.4,8.4,W);E(cx,52,10.4,3.4,WD);
+      /* front legs: armoured shoulders, thick forelegs, the wrist joints, big gold claws */
+      oP([[cx-13.6,43],[cx-4.6,43],[cx-4.4,52],[cx-5,58.6],[cx-13,58.6],[cx-13.8,52]],W);P([[cx-13.6,43],[cx-11.4,43],[cx-11,58.6],[cx-13,58.6],[cx-13.8,52]],WD);
+      oE(cx-9.8,41.4,5.2,5,W);E(cx-10.6,44.2,4.2,1.6,WD);
+      E(cx-9,53.4,2.6,1.6,WJ);
+      oE(cx-9,60.4,5.8,2.6,W);P([[cx-14.4,61.6],[cx-3.6,61.6],[cx-3.8,62.6],[cx-14.2,62.6]],WD);
+      for(const x of [cx-12.4,cx-9,cx-5.6])gclaw(h,[[x,60.4],[x,62],[x-.4,63.4]],1);
+      /* the broad armoured chest */
+      oP([[cx+1.2,38.6],[cx-5.4,39],[cx-6.6,45.4],[cx-4.6,50.4],[cx+1.2,52]],W);P([[cx-6.6,45.4],[cx-4.6,50.4],[cx+1.2,52],[cx+1.2,50.4],[cx-4,49],[cx-5.6,45]],WD);
+      B([[cx-.1,40.4],[cx-.1,50.4]],.3,.3,WD);
+      /* the red scarf round the neck */
+      oP([[cx+1.2,33.4],[cx-8.6,33],[cx-11,36.6],[cx-7.4,40.2],[cx+1.2,40.8]],RE);P([[cx-10.2,37.4],[cx-7.4,40.2],[cx+1.2,40.8],[cx+1.2,39.4],[cx-7,38.8]],RD);
+      P([[cx-8,33.8],[cx-3,34],[cx-6,35.4]],RL);
+      /* the horns: the big one rising from the crown with its red front edge, two pairs of shorter spikes sweeping back */
+      const h3=aguPath([[cx-8.6,27.4],[cx-13.2,27],[cx-17.2,28]]);B(h3,2.2,.3,OUT);B(h3,1.6,.2,W);
+      const h2=aguPath([[cx-7,23],[cx-11.8,18.6],[cx-17.2,16.6]]);B(h2,3,.3,OUT);B(h2,2.4,.2,W);B(h2,.9,.1,WD,.1,1,.2,.8);
+      oP([[cx-3.8,21.6],[cx-2.6,12.4],[cx-1,4.6],[cx+1.2,1.4],[cx+1.2,21.6]],W);P([[cx-3.8,21.6],[cx-2.6,12.4],[cx-1,4.6],[cx-.4,4],[cx-1.6,12.4],[cx-2.4,21.6]],WD);
+      P([[cx-.6,19.6],[cx-.4,8],[cx+1.2,4.4],[cx+1.2,19.6]],RE);
+      /* the head: the angular white helmet, the muzzle seen from the front (short, it points at you), the jaw (it drops open) */
+      oP([[cx+1.2,19],[cx-5,19.4],[cx-10,22],[cx-11.4,26],[cx-10,30],[cx-6.6,32.4],[cx-4,32.6],[cx+1.2,32.6]],W);
+      P([[cx-11.2,27.4],[cx-10,30],[cx-6.6,32.4],[cx-4.4,32.2],[cx-4.6,31],[cx-8.6,29.2]],WD);
+      const jy=open?2.4:0;
+      oP([[cx+1.2,32.6],[cx-3.6,32.4],[cx-3.2,34.8+jy*.6],[cx-1.8,36+jy],[cx+1.2,36.2+jy]],W);P([[cx-3.2,34.8+jy*.6],[cx-1.8,36+jy],[cx+1.2,36.2+jy],[cx+1.2,35.4+jy],[cx-1.8,35.2+jy]],WD);
+      if(open){P([[cx+1.2,33],[cx-3.2,32.8],[cx-2.8,34.4+jy*.5],[cx-1.4,35.4+jy*.7],[cx+1.2,35.6+jy*.7]],MOUTH);aguTeeth(h,[[cx-2.2,35+jy*.7]],-1,W)}
+      oP([[cx+1.2,26.6],[cx-3.2,26.8],[cx-4.2,29],[cx-4,31.8],[cx-2.8,33],[cx+1.2,33.2]],W);P([[cx-4.2,29],[cx-4,31.8],[cx-2.8,33],[cx-2,33],[cx-3,31.4],[cx-3.2,29]],WD);
+      E(cx,30.2,1.8,1.1,OUT);E(cx,30,1.2,.6,WJ);aguTeeth(h,[[cx-3,33.4]],1,W);
+      /* red marks over the eyes running out to the horns, and on the cheeks */
+      B(aguPath([[cx-8.4,23.2],[cx-10.4,24.6]]),.6,.4,RE);
+      B(aguPath([[cx-7.6,27.8],[cx-9.8,28.8]]),.6,.4,RE);
+    });
+    cv.front=true;return cv}
+
+  /* ---------- 4. SaviorHackmon: a tall two-legged dragon knight covered in blades: white armour with gold trim, a horned white
+     helmet with red-lensed goggles on its brow, golden eyes, a red scarf, the red crystal in its chest and a long red cape; three
+     crimson blades, one on each forearm and one on the tail (Trident Saber); long blade legs that end in points, gold claws ---------- */
+  /* a crimson crescent blade: from its root (x0,y0) to its tip (x1,y1), bowed b to one side */
+  function crescentP(x0,y0,x1,y1,w,b){const dx=x1-x0,dy=y1-y0,l=hypot(dx,dy),nx=-dy/l,ny=dx/l,p=(t,o)=>[x0+dx*t+nx*o,y0+dy*t+ny*o],o=[],i=[];
+    for(let j=0;j<=8;j++){const t=j/8,bow=b*sin(PI*t),hw=w/2*sin(PI*min(1,t*1.2+.08))**.7*(1-t*.3);o.push(p(t,bow+hw));i.push(p(t,bow-hw*.35))}
+    return [...o,...i.reverse()]}
+  function crescent(k,x0,y0,x1,y1,w,b){const c=crescentP(x0,y0,x1,y1,w,b);k.oP(c,CR);k.P(crescentP(x0,y0,x1,y1,w*.42,b-w*.12),CRL);
+    k.P(crescentP(x0,y0,x1,y1,w*.5,b+w*.32),CRD)}
+  /* the red crystal in the chest: dark rim, red, a white shine */
+  function gem(k,x,y,rx,ry){k.E(x,y,rx+k.d,ry+k.d,OUT);k.E(x,y,rx,ry,PAL.gem);k.E(x+rx*.25,y+ry*.3,rx*.55,ry*.5,CR);k.px(x-rx*.35,y-ry*.4,C.white)}
+  function savSide(lids,s){
+    const open=lids>=2;
+    return build(64,72,s,{ax:38,fy:71,mx:56.4,my:open?19.6:18.6,top:.6,lids},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the long red cape blowing back from the shoulders: one sheet with a flame-cut hem, dark folds and light ridges */
+      oP([[37,20.4],[30,19.2],[22,19.8],[14,22.4],[8,26.2],[2.6,30.6],[6.4,33.4],[3.6,39.6],[8.6,41],[6.2,47.6],[11.4,48.4],[10,55],[15,54.6],
+        [15,61.6],[19.6,59.4],[21.6,66],[24.6,61],[27.6,64.6],[28.6,58],[30.4,48],[32,38],[33.4,30],[35,24]],RE);
+      P([[33,27],[26,30],[19,36],[13.6,43],[10,50],[11.4,48.4],[6.2,47.6],[8.6,41],[3.6,39.6],[6.4,33.4],[2.6,30.6],[9,28.6],[18,25.6],[27,25]],RD);
+      P([[30,32],[24.6,40],[20.6,50],[19.6,59.4],[15,61.6],[15,54.6],[16,47],[19.6,39],[25.6,32.6]],RD);
+      B(aguPath([[33,22],[24,22.4],[15,25.6],[8,30]]),1.1,.3,RL);B(aguPath([[31,29],[23.6,34],[17.6,42],[14,50]]),.8,.2,RL);
+      B(aguPath([[31.6,35],[27.6,44],[25.6,54],[25,61]]),.8,.2,RL);
+      /* the far leg behind, in shade: thigh, knee, the long blade it walks on */
+      oP([[33.4,43],[39.4,44.4],[35.6,54.6],[30.6,54.6]],WD);oP([[30,54],[35.8,54.6],[34.2,63],[32,71.2],[30.8,63]],WD);P([[30,54],[31.6,54.4],[32.2,71],[30.8,63]],WK);
+      E(32.8,54.6,2,2,WJ);
+      /* the tail out behind with its crimson blade */
+      const tl=aguPath([[34,44],[27.6,47.4],[22,52],[17.6,57]]);B(tl,3.2,1.5,OUT);B(tl,2.6,1,WD);B(tl,2,.6,W,0,1,0,-.4);
+      crescent(k,18.6,56,9,65.4,4.6,1.4);
+      /* the far arm, in shade, its crimson blade showing behind the body */
+      crescent(k,36.6,34.6,28,30.4,4,-1.2);
+      /* body: the white chest plate with gold trim, the narrow waist with a gold belt, the hips */
+      oE(37.6,44.6,5.6,4.2,W);E(37.2,47.4,4.6,1.4,WD);
+      oP([[34.6,37],[42.6,37],[42,42.4],[35.4,42.6]],W);P([[34.6,37],[36,37],[36.6,42.6],[35.4,42.6]],WD);
+      oP([[34.4,24],[42.6,23.4],[46.6,27],[47,33],[44,38],[37,39],[33.4,34],[32.8,28]],W);
+      P([[33.4,34],[37,39],[44,38],[45,36.4],[38,37.2],[34.8,33.4]],WD);
+      B([[33.8,38.4],[43.4,38.2]],.6,.6,GO);B([[33.8,39.2],[43.4,39]],.25,.25,GOD);
+      /* the near leg: an armoured thigh, a gold-trimmed knee guard, the long blade it walks on, sharp at the point */
+      oP([[36.2,43],[42.8,44],[45,53.4],[39.8,54.6]],W);P([[36.2,43],[38,43.4],[41.2,54.4],[39.8,54.6]],WD);
+      oP([[39.4,54],[45.6,54.4],[46.8,62],[47.8,71.2],[43,62.6]],W);P([[39.4,54],[41.2,54.2],[44.2,62.4],[47.6,71],[43,62.6]],WD);
+      oE(43,54.4,3,2.6,W);B([[40.4,56.2],[45.4,55.8]],.45,.45,GO);E(43,54,1.4,1.2,WJ);
+      /* the near arm: the shoulder plate with its gold rim, the forearm reaching forward, gold claws, the crimson blade along it */
+      oP([[38.2,30],[42,30.6],[42.4,35.6],[39.2,36]],W);
+      oP([[38.8,34.4],[42.6,33.8],[48.6,36.8],[48.4,39.6],[44,39.2],[39,37.6]],W);P([[39,37.6],[44,39.2],[48.4,39.6],[48.4,38.6],[44.2,38],[39.4,36.4]],WD);
+      B([[46.6,36.4],[46.2,39.8]],.5,.5,GO);
+      gclaw(h,[[48.4,37],[51,37.6],[52.2,39.6]],.85);gclaw(h,[[48.6,38.8],[50.8,39.8],[51.4,41.6]],.8);gclaw(h,[[47.4,39.4],[48.4,40.8],[48.4,42.2]],.7);
+      oE(37.8,27.2,4.8,4,W);P([[33.4,28.4],[34.6,30.6],[38,31.4],[42,30.2],[42.6,28.6],[41.4,29.6],[37.8,30.4],[35,29.6]],WD);
+      B(aguPath([[33.4,28.4],[35.4,31],[38.4,31.6],[42,30.4],[42.8,28.4]]),.45,.45,GO);
+      gem(k,45.2,28.8,1.6,2);
+      crescent(k,46.6,39,34.4,47.6,4.6,-1.6);
+      /* the red scarf at the neck, its end flying back over the cape */
+      flames(k,[[[[36,20.4],[29,19.4],[21.6,21.6]],4]]);
+      oP([[37.4,18.4],[44.6,19.6],[45.4,23.4],[40,25.4],[35.6,23.4]],RE);P([[35.6,22.4],[40,24.2],[45.2,22.6],[45.4,23.4],[40,25.4],[35.6,23.4]],RD);
+      P([[38.4,19.4],[43.6,20.4],[40.4,21.6]],RL);
+      /* the head: a white helmet and long muzzle, the jaw with fangs (it drops open for the grin) */
+      const hg=[43,19],an=open?.3:0,rot=([x,y])=>[hg[0]+(x-hg[0])*cos(an)-(y-hg[1])*sin(an),hg[1]+(x-hg[0])*sin(an)+(y-hg[1])*cos(an)];
+      const jaw=[[42,18.8],[55,18.4],[54.4,20.2],[50,22],[44.6,22.2],[41.4,20.8]].map(rot);
+      oP(jaw,W);P([[44.6,21.2],[50,21],[54.2,19.8],[54.4,20.2],[50,22],[44.6,22.2]].map(rot),WD);
+      if(open){P([[42.6,19],[55.2,18.6],...[[55,18.8],[42.6,19.2]].map(rot)],MOUTH);aguTeeth(h,[[47.6,19.2],[51.4,19]].map(rot),-1,W)}
+      const sk=[[36.8,15.8],[38.4,11.2],[42.6,9],[48,9.2],[51.4,11],[53.4,13],[57.4,15.8],[57.6,17.4],[56,18.4],[50.4,19],[43.4,19.6],[39.4,19]];
+      oP(sk,W);P([[39.4,19],[43.4,19.6],[50.4,19],[56,18.4],[57.4,17.6],[56,19.2],[50.4,19.8],[43.4,20.4]],WD);
+      aguTeeth(h,[[49.6,19.2],[53.6,18.8]],1,W);
+      px(56,15.6,OUT);
+      /* the horns: the big one from the crown sweeping up and back, a red edge on it; two spikes behind */
+      const h3=aguPath([[38.6,15.8],[34.8,15.6],[31.6,16.6]]);B(h3,1.9,.3,OUT);B(h3,1.3,.2,W);
+      const h2=aguPath([[39.4,12.6],[35.6,10.6],[31.4,10.2]]);B(h2,2.2,.3,OUT);B(h2,1.6,.2,W);
+      const h1=aguPath([[44,10.4],[42.4,5.6],[39.2,2.4],[34.4,.6]]);B(h1,4,.3,OUT);B(h1,3.3,.2,W);B(h1,1.2,.1,WD,.1,1,-.6,1);
+      B(h1,.75,.1,RE,.08,.8,.8,-.8);
+      /* the goggles on its brow: a gold strap round the helmet and a red lens; the sharp golden eye under them */
+      B(aguPath([[38.2,13.2],[42.6,11.8],[45.6,11.2]]),.75,.75,GOD);B(aguPath([[38.2,12.8],[42.6,11.4],[45.6,10.8]]),.5,.5,GO);
+      oP([[45,9.2],[50.4,9.6],[51.8,11.2],[50.6,12.6],[45.4,12.6]],GO);P([[45.8,10],[50.2,10.4],[51,11.2],[50.2,11.8],[45.8,11.8]],CR);px(46.4,10.2,CRL);
+      B(aguPath([[50.6,16.4],[46.6,16.8],[42.4,16]]),.5,.25,RE);
+      sEye(h,48.4,14,lids,1,1.25);
+    })}
+  function savFront(lids,s){
+    const open=lids>=2,cx=ceil(58*s)/(2*s);
+    const cv=build(58,72,s,{ax:cx,fy:71,mx:cx,my:open?20.4:19.6,top:.6,lids,mirror:1,after:h=>{
+      const k=kitOf(h);
+      /* the tail's crimson blade peeks out low on one side */
+      h.behind(()=>{const c=crescentP(cx+9,56,cx+19.6,62.6,4.4,-1.2);k.P(crescentP(cx+9,56,cx+19.6,62.6,2,-1.6),CRL);k.P(c,CR);
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])k.P(T(c,dx/s,dy/s),OUT)});
+      const [ew,eh]=aguEyeWH(h.s*1.25),ex=round(h.X(cx-4.2)-ew/2),ey=round(h.Y(14)-eh/2);
+      aguEye(h,ex,ey,ew,eh,PAL.eye,W,1,1,OUT,lids);aguEye(h,h.Wd-ex-ew,ey,ew,eh,PAL.eye,W,-1,-1,OUT,lids)}},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the long red cape behind, spreading out to both sides down to its flame-cut hem */
+      oP([[cx+1.2,21],[cx-8,21.4],[cx-14,24],[cx-18.6,30],[cx-21.6,38],[cx-24.6,47],[cx-27.4,55],[cx-23.6,54.6],[cx-24.4,62],[cx-20,59.6],
+        [cx-19.4,66.4],[cx-15.6,61.6],[cx-13,66],[cx-10.4,60],[cx-7.6,63],[cx-6,56],[cx+1.2,56]],RE);
+      P([[cx-12.6,30],[cx-15.6,40],[cx-18.6,50],[cx-19.4,57],[cx-20,59.6],[cx-24.4,62],[cx-23.6,54.6],[cx-27.4,55],[cx-24.6,47],[cx-21.6,38],[cx-18.6,30],[cx-16,26.4]],RD);
+      P([[cx-9,40],[cx-11.6,50],[cx-13,60],[cx-13,66],[cx-15.6,61.6],[cx-15,52],[cx-12.6,42]],RD);
+      B(aguPath([[cx-14,25.6],[cx-17.6,32],[cx-20.6,42],[cx-23,52]]),.9,.2,RL);B(aguPath([[cx-11,34],[cx-13,44],[cx-15,54],[cx-16.4,61]]),.7,.2,RL);
+      /* the legs: armoured thighs, gold-trimmed knee guards, long blades that end in points */
+      oP([[cx-6.8,43.4],[cx-1,44],[cx-2,54],[cx-7.4,54]],W);P([[cx-6.8,43.4],[cx-5,43.6],[cx-5.6,54],[cx-7.4,54]],WD);
+      oP([[cx-7.6,54],[cx-2,54],[cx-2.6,62],[cx-4.6,71.2],[cx-6.6,62]],W);P([[cx-7.6,54],[cx-5.8,54],[cx-4.6,71],[cx-6.6,62]],WD);
+      oE(cx-4.8,54.4,3.2,2.4,W);B([[cx-7.6,56],[cx-2,56]],.45,.45,GO);E(cx-4.8,54,1.4,1.1,WJ);
+      /* hips and the waist with its gold belt */
+      oE(cx,44.4,7.4,4.2,W);E(cx,47,5.4,1.4,WD);
+      oP([[cx+1.2,37],[cx-5,37],[cx-4.6,42.4],[cx+1.2,42.6]],W);P([[cx-5,37],[cx-3.6,37],[cx-3.4,42.6],[cx-4.6,42.4]],WD);
+      B([[cx-5.6,38.6],[cx+1.2,38.6]],.6,.6,GO);B([[cx-5.6,39.4],[cx+1.2,39.4]],.25,.25,GOD);
+      /* the arms at the sides, gold claws; the crimson blades on the forearms sweep up and out */
+      oP([[cx-11.6,29],[cx-7.6,29],[cx-7.8,36],[cx-11.8,36]],W);
+      oP([[cx-12.4,35],[cx-7.8,35],[cx-8.2,41.6],[cx-12.6,41.6]],W);P([[cx-12.4,35],[cx-11,35],[cx-11.2,41.6],[cx-12.6,41.6]],WD);
+      B([[cx-12.6,39.4],[cx-8,39.4]],.5,.5,GO);
+      for(const x of [cx-12.2,cx-10.2,cx-8.4])gclaw(h,[[x,41.4],[x-.2,43],[x-.6,44.4]],.7);
+      crescent(k,cx-11.4,40.6,cx-23,29.4,5,1.8);
+      /* the chest plate with gold trim and the red crystal */
+      oP([[cx+1.2,23.4],[cx-6.6,23.8],[cx-8.6,28],[cx-7.4,34],[cx-4,38],[cx+1.2,38.6]],W);
+      P([[cx-8.6,28],[cx-7.4,34],[cx-4,38],[cx+1.2,38.6],[cx+1.2,37.4],[cx-3.6,36.8],[cx-6.4,33.4],[cx-7.4,28.4]],WD);
+      B(aguPath([[cx-7.4,26],[cx-4,31.4],[cx+1.2,32.6]]),.4,.4,GO);
+      gem(k,cx,28.6,2,2.4);
+      /* the shoulder plates with their gold rims */
+      oE(cx-9.6,26.6,4.6,4,W);B(aguPath([[cx-13.6,27.4],[cx-11.6,30],[cx-8,30.4],[cx-5.6,28.8]]),.45,.45,GO);
+      /* the red scarf */
+      oP([[cx+1.2,19.4],[cx-6.6,19.4],[cx-8.4,22.4],[cx-5,25.4],[cx+1.2,26]],RE);P([[cx-7.8,23],[cx-5,25.4],[cx+1.2,26],[cx+1.2,24.8],[cx-4.8,24.2]],RD);
+      P([[cx-6,19.8],[cx-1.6,20],[cx-4.4,21.4]],RL);
+      /* the horns: the big one rising from the crown with a red front edge, the spikes sweeping back at the sides */
+      const h3=aguPath([[cx-7.6,15.6],[cx-11,15.2],[cx-13.8,16]]);B(h3,1.8,.3,OUT);B(h3,1.2,.2,W);
+      const h2=aguPath([[cx-7,11.6],[cx-10.4,9],[cx-13.4,8.2]]);B(h2,2.2,.3,OUT);B(h2,1.6,.2,W);
+      oP([[cx-3,8.4],[cx-2.2,4.6],[cx-.8,1.4],[cx+1.2,.2],[cx+1.2,8.4]],W);P([[cx-3,8.4],[cx-2.2,4.6],[cx-.8,1.4],[cx-.4,1.2],[cx-1.4,5],[cx-1.8,8.4]],WD);
+      P([[cx-.5,7.6],[cx-.3,3],[cx+1.2,1.8],[cx+1.2,7.6]],RE);
+      /* the head: the white helmet, the muzzle pointing at you, the jaw (it drops open for the grin) */
+      oP([[cx+1.2,5.8],[cx-3.6,6.2],[cx-7,8.4],[cx-8.4,12],[cx-8.2,15.4],[cx-7.2,18],[cx-4.6,19.8],[cx+1.2,19.8]],W);
+      P([[cx-8.2,15.6],[cx-7.2,18],[cx-4.6,19.8],[cx-3.6,19.6],[cx-3.8,18.6],[cx-6.4,17.2]],WD);
+      P([[cx-3.6,6.2],[cx-7,8.4],[cx-7.8,10],[cx-6,8.6],[cx-3,7.4]],WD);
+      const jy=open?2.2:0;
+      oP([[cx+1.2,19.6],[cx-3.2,19.4],[cx-2.8,21.4+jy*.6],[cx-1.6,22.6+jy],[cx+1.2,22.8+jy]],W);P([[cx-2.8,21.4+jy*.6],[cx-1.6,22.6+jy],[cx+1.2,22.8+jy],[cx+1.2,22+jy],[cx-1.6,21.8+jy]],WD);
+      if(open){P([[cx+1.2,20],[cx-2.8,19.8],[cx-2.4,21+jy*.5],[cx-1.2,22+jy*.7],[cx+1.2,22.2+jy*.7]],MOUTH);aguTeeth(h,[[cx-1.8,21.6+jy*.7]],-1,W)}
+      oP([[cx+1.2,14.6],[cx-2.4,14.8],[cx-3.4,17],[cx-3.2,19.4],[cx-2.2,20.4],[cx+1.2,20.6]],W);P([[cx-3.4,17],[cx-3.2,19.4],[cx-2.2,20.4],[cx-1.4,20.4],[cx-2.2,19],[cx-2.4,17]],WD);
+      aguTeeth(h,[[cx-2.6,20.4]],1,W);
+      /* the goggles on its brow: two red lenses in gold rims joined by a gold bridge, the strap round the helmet */
+      B([[cx-6.6,10.6],[cx-8.6,11.2]],.55,.55,GO);
+      E(cx-3.6,10.4,2.6,1.7,OUT);E(cx-3.6,10.4,2.1,1.2,GO);E(cx-3.5,10.4,1.4,.7,CR);px(cx-4.2,10,CRL);
+      B([[cx-1.4,10.4],[cx+1.2,10.4]],.45,.45,GO);
+      B(aguPath([[cx-6.6,16.8],[cx-7.8,17.6]]),.5,.3,RE);
+    });
+    cv.front=true;return cv}
+
+  /* ---------- 5. Jesmon: a Royal Knight in white armour trimmed with gold: a white helmet with a gold crest and swept-back horns,
+     golden eyes, a red V-shaped collar on the chest and a long red cape; all its limbs are blades: a long red sword in its right
+     hand, a blade on the left arm, a sword on its tail, legs that end in blade points ---------- */
+  /* a long straight sword from the hilt (x0,y0) to the tip (x1,y1): a gold cross-guard, the blade c with a light edge cl and a
+     dark fuller down its middle cd */
+  function sword(k,x0,y0,x1,y1,w,c,cl,cd,guard=1){const dx=x1-x0,dy=y1-y0,l=hypot(dx,dy),ux=dx/l,uy=dy/l,nx=-uy,ny=ux,p=(t,o)=>[x0+dx*t+nx*o,y0+dy*t+ny*o];
+    const bl=[p(0,w/2),p(.86,w/2),p(1,0),p(.86,-w/2),p(0,-w/2)];k.oP(bl,c);k.P([p(0,w/2),p(.86,w/2),p(1,0),p(.86,w*.1),p(0,w*.1)],cl);
+    k.B([p(.04,0),p(.8,0)],w*.13,w*.13,cd);
+    if(guard){const g=[p(-.02,w*1.25),p(.03,w*1.25),p(.03,-w*1.25),p(-.02,-w*1.25)];k.oP(g,GO);k.P([p(.005,w*1.2),p(.03,w*1.2),p(.03,-w*1.2),p(.005,-w*1.2)],GOD)}}
+  function jesSide(lids,s){
+    const open=lids>=2;
+    return build(70,80,s,{ax:40,fy:79,mx:58.6,my:open?18.6:17.6,top:.6,lids},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the long red cape blowing back from the shoulders: one sheet with a flame-cut hem */
+      oP([[38,21],[30,20],[21,21.2],[13,24.4],[7,29],[2,34.6],[5.6,37],[2.4,44],[7.4,45.4],[4.6,52.6],[10,53.4],[8,60.6],[13.6,60.6],[13,68.4],
+        [18.4,65.4],[19.6,73.4],[23.6,67.6],[26.4,72.4],[28.6,65],[30.6,54],[32.6,43],[34.4,33],[36,26]],RE);
+      P([[34,28],[26,31.6],[18.4,38.4],[12.6,46],[8.6,54],[10,53.4],[4.6,52.6],[7.4,45.4],[2.4,44],[5.6,37],[2,34.6],[9,31.6],[19,27],[29,26]],RD);
+      P([[31,34],[25,43],[20.6,53.6],[18.8,64],[18.4,65.4],[13,68.4],[13.6,60.6],[15,51],[19,41.6],[25.6,34.6]],RD);
+      B(aguPath([[35,22.6],[25,23],[15,27],[7,32.6]]),1.1,.3,RL);B(aguPath([[32,30.6],[24.6,36.4],[18,45],[13.6,54]]),.8,.2,RL);
+      B(aguPath([[32.6,38],[28.6,48],[26.4,58],[25.4,66]]),.8,.2,RL);
+      /* the far leg behind, in shade: an armoured thigh, the knee, the long blade it stands on */
+      oP([[35.4,47],[42,48.4],[38.4,60],[32.6,60]],WD);oP([[32,59.4],[38.4,60],[36.6,69.6],[34.4,79.2],[32.8,69.6]],WD);P([[32,59.4],[33.8,59.8],[34.4,79],[32.8,69.6]],WK);
+      E(35.2,60,2.2,2,WJ);B([[32.4,61.6],[38,61.6]],.4,.4,GOD);
+      /* the far arm, in shade: its long white arm blade reaching back */
+      blade(k,37,37,22.6,46,4.2,WD,WK,.25);
+      /* the sword on its tail, out behind */
+      const tl=aguPath([[36,48],[29.6,52],[24,57],[19.6,62]]);B(tl,3.4,1.6,OUT);B(tl,2.8,1.1,WD);B(tl,2.1,.7,W,0,1,0,-.4);
+      sword(k,19.8,62,8.6,73.6,3.2,W,'#ffffff',WD);
+      /* hips and the waist with its gold belt */
+      oE(39.6,48.2,6.2,4.6,W);E(39,51.2,5,1.4,WD);
+      oP([[36.4,40],[45,40],[44.4,46],[37.2,46.2]],W);P([[36.4,40],[38,40],[38.6,46.2],[37.2,46.2]],WD);
+      B([[35.8,42.4],[45.4,42.2]],.75,.75,GO);B([[35.8,43.4],[45.4,43.2]],.3,.3,GOD);
+      /* the armoured neck */
+      oP([[38.6,15],[44.6,14.6],[47.4,22.6],[37.6,24.4]],W);P([[38.6,15],[40.4,15],[40,24],[37.6,24.4]],WD);
+      /* the broad white chest plate, gold trim, the red V collar */
+      oP([[35.6,23],[44.6,22.4],[48.6,26.6],[49.2,33.4],[46.4,39.4],[38.4,41],[34.4,36],[33.8,29]],W);
+      P([[34.4,36],[38.4,41],[46.4,39.4],[47.4,37.4],[39.4,38.8],[35.8,35.4]],WD);
+      B(aguPath([[34.6,37.6],[38.6,41.4],[46.6,39.6]]),.4,.4,GO);
+      oP([[41,22.6],[47.6,23.6],[49,26.6],[47.4,33.6],[45.4,33.4],[46,27.6],[41.4,25.6]],RE);P([[46,27.6],[47.6,27],[47.4,33.6],[45.4,33.4]],RD);
+      /* the near leg: an armoured thigh with gold trim, a knee guard, the long blade it stands on */
+      oP([[38.6,47],[45.6,48],[47.6,58.6],[42.2,59.6]],W);P([[38.6,47],[40.4,47.4],[43.8,59.4],[42.2,59.6]],WD);
+      B([[39,50.4],[45.6,50.4]],.4,.4,GO);
+      oP([[41.6,59],[48,59.4],[49.6,68],[50.6,79.2],[45.6,68.6]],W);P([[41.6,59],[43.4,59.2],[46.8,68.4],[50.4,79],[45.6,68.6]],WD);
+      oE(45.2,59.6,3.4,2.8,W);B([[42.4,61.8],[48,61.4]],.5,.5,GO);E(45.2,59.2,1.6,1.3,WJ);
+      /* the near arm: a big gold-rimmed shoulder plate, the arm reaching forward, its hand holding the long red sword */
+      oP([[40.4,31],[44.6,31.6],[45.2,37.6],[41.8,38]],W);
+      oP([[41.6,36.4],[45.6,35.6],[52.6,38.6],[52.4,41.6],[47.6,41.4],[42,39.6]],W);P([[42,39.6],[47.6,41.4],[52.4,41.6],[52.4,40.6],[47.8,40.2],[42.4,38.4]],WD);
+      B([[50,38.2],[49.6,41.6]],.55,.55,GO);
+      sword(k,53.6,40.2,67.4,73,3.4,CR,CRL,CRD);
+      oE(54,40.2,2.2,2.2,W);B([[53.2,38.6],[54.8,41.8]],.4,.4,GOD);
+      oE(40.2,27.4,6,4.8,W);P([[34.4,28.6],[35.8,31.4],[40,32.4],[45,30.8],[46,28.6],[44.4,30],[40.2,31],[36.4,30]],WD);
+      B(aguPath([[34.4,28.6],[36.6,31.6],[40.4,32.6],[45,31],[46.2,28.4]]),.5,.5,GO);B(aguPath([[36,24.2],[40.6,22.8],[45,23.8]]),.4,.4,GO);
+      /* the head: a white helmet over the long muzzle, a gold crest on the brow and gold-edged horns sweeping back; the jaw drops
+         open for the grin */
+      const hg=[45.4,17.8],an=open?.28:0,rot=([x,y])=>[hg[0]+(x-hg[0])*cos(an)-(y-hg[1])*sin(an),hg[1]+(x-hg[0])*sin(an)+(y-hg[1])*cos(an)];
+      const jaw=[[44.4,17.6],[57.2,17.2],[56.6,19],[52.4,20.8],[47,21],[43.8,19.6]].map(rot);
+      oP(jaw,W);P([[47,20],[52.4,19.8],[56.4,18.6],[56.6,19],[52.4,20.8],[47,21]].map(rot),WD);
+      if(open){P([[45,17.8],[57.4,17.4],...[[57.2,17.6],[45,18]].map(rot)],MOUTH);aguTeeth(h,[[50,18],[53.6,17.8]].map(rot),-1,W)}
+      oP([[39.4,14.6],[41,10.2],[45,8],[50.2,8.2],[53.6,10],[55.6,12],[59.4,14.6],[59.6,16.2],[58,17.2],[52.6,17.8],[45.8,18.4],[41.8,17.8]],W);
+      P([[41.8,17.8],[45.8,18.4],[52.6,17.8],[58,17.2],[59.4,16.4],[58,18],[52.6,18.6],[45.8,19.2]],WD);
+      aguTeeth(h,[[52,18],[55.8,17.6]],1,W);
+      px(58,14.4,OUT);
+      /* swept-back horns, white with gold edges */
+      const h3=aguPath([[41.4,14.4],[36,13.8],[30.6,15]]);B(h3,2.6,.3,OUT);B(h3,2,.2,W);B(h3,.6,.1,GO,.1,.8,0,-.9);
+      const h2=aguPath([[42.4,10.8],[36.6,7.6],[29.8,6.6]]);B(h2,3.2,.3,OUT);B(h2,2.6,.2,W);B(h2,.7,.1,GO,.1,.8,.2,-1.2);
+      /* the gold crest rising from the brow */
+      oP([[46.6,9],[45.8,4.6],[43.6,.6],[47.6,3.4],[50.4,8.6]],GO);P([[46.6,9],[45.8,4.6],[43.6,.6],[46.4,4.4],[48.2,8.8]],GOD);
+      /* the gold trim on the helmet, the sharp golden eye */
+      B(aguPath([[40.4,12.4],[45,9.6],[50.6,9.8],[54.6,12]]),.45,.45,GO);
+      sEye(h,50.6,13,lids,1,1.25);
+    })}
+  function jesFront(lids,s){
+    const open=lids>=2,cx=ceil(64*s)/(2*s);
+    const cv=build(64,80,s,{ax:cx,fy:79,mx:cx,my:open?19.6:18.8,top:.6,lids,mirror:1,after:h=>{
+      const k=kitOf(h);
+      /* the tail's sword peeks out low on one side */
+      h.behind(()=>{const b=bladeP(cx+10,62,cx+22.6,70,3.2,.8);k.P(b.half,WD);k.P(b.all,W);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])k.P(T(b.all,dx/s,dy/s),OUT)});
+      /* the long red sword in its right hand, held point down and out */
+      sword(k,cx-13.6,45.6,cx-27.4,75,3.4,CR,CRL,CRD);
+      k.oE(cx-13.4,44.6,2.4,2.4,W);
+      const [ew,eh]=aguEyeWH(h.s*1.25),ex=round(h.X(cx-4.2)-ew/2),ey=round(h.Y(13)-eh/2);
+      aguEye(h,ex,ey,ew,eh,PAL.eye,W,1,1,OUT,lids);aguEye(h,h.Wd-ex-ew,ey,ew,eh,PAL.eye,W,-1,-1,OUT,lids)}},h=>{
+      const k=kitOf(h),{P,E,B,oP,oE,px}=k;
+      /* the long red cape behind, spreading out to both sides down to its flame-cut hem */
+      oP([[cx+1.2,21],[cx-9,21.4],[cx-15.6,24],[cx-20.6,30.6],[cx-23.6,39],[cx-26.6,48],[cx-29.4,57],[cx-25.6,56.6],[cx-26.4,65],[cx-22,62.4],
+        [cx-21.4,71],[cx-17.4,65.6],[cx-14.6,70.6],[cx-12,64],[cx-9,67.4],[cx-7.4,60],[cx+1.2,60]],RE);
+      P([[cx-13.6,31],[cx-16.6,42],[cx-19.6,52],[cx-20.6,60],[cx-22,62.4],[cx-26.4,65],[cx-25.6,56.6],[cx-29.4,57],[cx-26.6,48],[cx-23.6,39],[cx-20.6,30.6],[cx-17.6,27]],RD);
+      P([[cx-9.6,42],[cx-12.4,53],[cx-14,64],[cx-14.6,70.6],[cx-17.4,65.6],[cx-16.6,55],[cx-13.4,44]],RD);
+      B(aguPath([[cx-15.6,26],[cx-19.4,33],[cx-22.6,44],[cx-25,55]]),.9,.2,RL);B(aguPath([[cx-12,36],[cx-14,47],[cx-16,58],[cx-17.6,66]]),.7,.2,RL);
+      /* the legs: armoured thighs with gold trim, knee guards, long blades that end in points */
+      oP([[cx-7.8,47.4],[cx-1.2,48],[cx-2.2,59],[cx-8.4,59]],W);P([[cx-7.8,47.4],[cx-6,47.6],[cx-6.6,59],[cx-8.4,59]],WD);B([[cx-8,50.6],[cx-1.4,50.6]],.4,.4,GO);
+      oP([[cx-8.8,59],[cx-2.2,59],[cx-3,68],[cx-5.4,79.2],[cx-7.8,68]],W);P([[cx-8.8,59],[cx-6.8,59],[cx-5.4,79],[cx-7.8,68]],WD);
+      oE(cx-5.4,59.6,3.6,2.6,W);B([[cx-8.8,61.6],[cx-2.2,61.6]],.5,.5,GO);E(cx-5.4,59.2,1.6,1.2,WJ);
+      /* hips, the waist with its gold belt */
+      oE(cx,48.2,8.4,4.6,W);E(cx,51,6,1.4,WD);
+      oP([[cx+1.2,40],[cx-5.6,40],[cx-5.2,46],[cx+1.2,46.2]],W);P([[cx-5.6,40],[cx-4.2,40],[cx-4,46.2],[cx-5.2,46]],WD);
+      B([[cx-6.4,42.4],[cx+1.2,42.4]],.75,.75,GO);B([[cx-6.4,43.4],[cx+1.2,43.4]],.3,.3,GOD);
+      /* the arms: long white blades along the forearms, pointing down and out past the hands */
+      blade(k,cx-13.6,40,cx-19.6,57,4,W,WD,.2);
+      oP([[cx-13,30],[cx-8.6,30],[cx-8.8,37.6],[cx-13.2,37.6]],W);
+      oP([[cx-14,37],[cx-9,37],[cx-9.6,44],[cx-14.4,44]],W);P([[cx-14,37],[cx-12.4,37],[cx-12.8,44],[cx-14.4,44]],WD);
+      B([[cx-14.4,41.6],[cx-9.4,41.6]],.55,.55,GO);
+      /* the broad chest plate, gold trim, the red V collar */
+      oP([[cx+1.2,22.6],[cx-7.6,23],[cx-9.8,27.6],[cx-8.6,34.6],[cx-4.6,40],[cx+1.2,40.6]],W);
+      P([[cx-9.8,27.6],[cx-8.6,34.6],[cx-4.6,40],[cx+1.2,40.6],[cx+1.2,39.4],[cx-4.2,38.8],[cx-7.6,34],[cx-8.6,28]],WD);
+      B(aguPath([[cx-9,35.4],[cx-4.6,40.6],[cx+1.2,41.2]]),.4,.4,GO);
+      oP([[cx+1.2,30.6],[cx-.4,30.6],[cx-7.6,22.4],[cx-4.4,22.4],[cx+1.2,27.2]],RE);P([[cx-.4,30.6],[cx-7.6,22.4],[cx-6.6,22.4],[cx+.2,29.6],[cx+1.2,29.6],[cx+1.2,30.6]],RD);
+      /* the big shoulder plates with gold rims */
+      oE(cx-11.2,27.2,5.6,4.6,W);E(cx-11.6,30,4.6,1.4,WD);
+      B(aguPath([[cx-16.4,28.4],[cx-14,31.4],[cx-10,31.8],[cx-6.4,29.6]]),.5,.5,GO);B(aguPath([[cx-15.8,25],[cx-12,22.8],[cx-8,23.2]]),.4,.4,GO);
+      /* the horns sweeping back at the sides of the helmet, white with gold edges */
+      const h3=aguPath([[cx-7.6,15.4],[cx-11.4,15],[cx-15,16]]);B(h3,2.2,.3,OUT);B(h3,1.6,.2,W);
+      const h2=aguPath([[cx-6.6,10.6],[cx-10.6,7.4],[cx-15,6.4]]);B(h2,2.8,.3,OUT);B(h2,2.2,.2,W);B(h2,.6,.1,GO,.1,.8,0,-.9);
+      /* the head: the white helmet, the muzzle pointing at you, the jaw (it drops open for the grin) */
+      oP([[cx+1.2,6.6],[cx-3.6,7],[cx-7,9.2],[cx-8.2,12.4],[cx-8,15.6],[cx-7,18],[cx-4.6,19.6],[cx+1.2,19.6]],W);
+      P([[cx-8,15.8],[cx-7,18],[cx-4.6,19.6],[cx-3.6,19.4],[cx-3.8,18.4],[cx-6.2,17]],WD);
+      const jy=open?2.2:0;
+      oP([[cx+1.2,19.4],[cx-3.2,19.2],[cx-2.8,21.2+jy*.6],[cx-1.6,22.4+jy],[cx+1.2,22.6+jy]],W);P([[cx-2.8,21.2+jy*.6],[cx-1.6,22.4+jy],[cx+1.2,22.6+jy],[cx+1.2,21.8+jy],[cx-1.6,21.6+jy]],WD);
+      if(open){P([[cx+1.2,19.8],[cx-2.8,19.6],[cx-2.4,20.8+jy*.5],[cx-1.2,21.8+jy*.7],[cx+1.2,22+jy*.7]],MOUTH);aguTeeth(h,[[cx-1.8,21.4+jy*.7]],-1,W)}
+      oP([[cx+1.2,14],[cx-2.4,14.2],[cx-3.4,16.6],[cx-3.2,19.2],[cx-2.2,20.2],[cx+1.2,20.4]],W);P([[cx-3.4,16.6],[cx-3.2,19.2],[cx-2.2,20.2],[cx-1.4,20.2],[cx-2.2,18.8],[cx-2.4,16.6]],WD);
+      aguTeeth(h,[[cx-2.6,20.2]],1,W);
+      /* the gold crest: two gold blades rising from the brow in a V */
+      oP([[cx+1.2,10.6],[cx-1.2,10.6],[cx-4.4,5],[cx-6.8,.6],[cx-2.6,4.2],[cx+1.2,8.4]],GO);P([[cx-1.2,10.6],[cx-4.4,5],[cx-6.8,.6],[cx-5,4.6],[cx-.4,9.8]],GOD);
+      B(aguPath([[cx-8,11.6],[cx-5.4,10],[cx-2,10.6]]),.45,.45,GO);
+    });
+    cv.front=true;return cv}
+
+  /* ---------- the special attacks, flying right ---------- */
+  /* a crescent opening to the left: the outer arc of radius r round (x,y) from angle a0 to a1, the inner one th further left */
+  const arcP=(x,y,r,th,a0,a1,n=10)=>{const o=[],i=[];for(let j=0;j<=n;j++){const a=a0+(a1-a0)*j/n,t=sin(PI*j/n);o.push([x+r*cos(a),y+r*sin(a)]);i.push([x-th*t+r*cos(a)-(1-t)*.3,y+r*sin(a)])}return [...o,...i.reverse()]};
+  /* Hackmon's Baby Flame: a small red-orange fireball with flickering licks behind it */
+  const babyFlame=()=>build(12,9,1,{ax:6,fy:8.4},h=>{const {E,P}=h;
+    P([[.4,4.5],[3.4,1.4],[3.4,3],[5.8,.8],[8,4.5],[5.8,8.2],[3.4,6],[3.4,7.6]],RE);
+    E(7.6,4.5,3.8,3.4,RE);E(8.3,4.5,2.8,2.5,'#ff8a1f');E(8.9,4.4,1.6,1.4,'#ffd23a');h.px(9.4,3.4,'#fff6c8',1)});
+  /* BaoHackmon's Fifth Cross: two claw slashes crossing in a red and white X */
+  const fifthCross=()=>build(15,14,1,{ax:7.5,fy:13.6},h=>{const {P}=h;
+    P([[.4,9],[2.6,7.4],[1.6,8.8]],RL);P([[.4,5],[2.6,6.6],[1.6,5.2]],RL);
+    for(const sg of [1,-1]){const Y=y=>sg>0?y:13.6-y;
+      P([[2.4,Y(.4)],[5,Y(.8)],[10,Y(5.6)],[14.4,Y(13)],[12.6,Y(13.2)],[8,Y(7)],[3.2,Y(2.4)]],RE);
+      P([[3.4,Y(1)],[5,Y(1.4)],[9.6,Y(6)],[13.2,Y(12.4)],[12.4,Y(12.4)],[8.4,Y(6.6)]],'#ffffff')}
+    P([[6.6,6.8],[7.6,5.2],[8.6,6.8],[7.6,8.4]],'#ffffff')});
+  /* SaviorHackmon's Trident Saber: three crimson crescent blades flying in an arrowhead */
+  const tridentSaber=()=>build(16,18,1,{ax:8,fy:17.6},h=>{const {P}=h;
+    for(const [x,y] of [[5.6,4],[10.8,9],[5.6,14]]){P(arcP(x,y,3.8,2.4,-1.22,1.22),CR);P(arcP(x+.3,y,3.5,.9,-1,1),CRL)}
+    P([[.4,9],[3.4,8.2],[3.4,9.8]],CRL)});
+  /* Jesmon's Judgement of the Blade: a big glowing blade wave, white and gold with a red edge */
+  const judgement=()=>build(22,20,1,{ax:11,fy:19.6},h=>{const {P}=h;
+    P(arcP(10.4,10,9.4,6.2,-1.3,1.3,16),RE);P(arcP(10,10,8.8,4.4,-1.24,1.24,16),GO);P(arcP(9.6,10,8.2,2.6,-1.16,1.16,16),'#fff6c8');
+    P(arcP(9.2,10,7.6,1.1,-1.02,1.02,16),'#ffffff');
+    P([[.6,10],[4,8.8],[4,11.2]],GO);P([[2,4.6],[4.8,4.8],[4,5.8]],'#fff6c8');P([[2,15.4],[4.8,15.2],[4,14.2]],'#fff6c8')});
+
+  const VIEWS=[null,[gigiSide,gigiFront],[hackSide,hackFront],[baoSide,baoFront],[savSide,savFront],[jesSide,jesFront]];
+  return {
+    scale:{home:[null,1,1,1,1,.97],battle:[null,1,.7,.47,.64,.62],panel:[null,1,.8,.5,.52,.47]},
+    draw(i,view,lids,s){return (VIEWS[i]||VIEWS[1])[view==='front'?1:0](lids,s)},
+    shot(i){return [null,bubble,babyFlame,fifthCross,tridentSaber,judgement][i]()},
+    egg:'#e8202a'};
+})();
 /* ---------- Agumon line in 3D, the evolved forms: Greymon > MetalGreymon > WarGreymon ----------
    For the 3D view and iPhone AR, built with ar.js's 3D kit. Koromon and Agumon stay the chibi models in ar.js; forms 3-5 come here,
    with canon proportions and attitude in the same toon style, bigger and cooler at each stage (0.50, 0.60 and 0.70 m to the top of the head).
@@ -7571,6 +8234,532 @@ LINE3D.gatomon=(k,f,R,m,s)=>{
 
   [null,nyaromon,salamon,gatomon,angewomon,ophanimon][f]();
 };
+/* ---------- Hackmon line in 3D: Gigimon > Hackmon > BaoHackmon > SaviorHackmon > Jesmon ----------
+   For the 3D view and iPhone AR, built with ar.js's 3D kit, in the colours of the pixel art (line-hackmon.js).
+   Gigimon: a round red blob on four stubby feet, two big bat-wing ears with jagged edges, big yellow eyes, a happy zigzag mouth with
+     one tiny fang, a black triangle on each side, the white belly ring round its bottom and a short tail with a black tip.
+   Hackmon: a chibi white dragon pup crouching on all fours, one tall horn sweeping up and back, red marks round the eyes and on the
+     cheeks, gold eyes, a red scarf and a big red cape flowing back over its body in flame-like tufts, three claws a paw, a white tail.
+   BaoHackmon: a big four-legged white dragon beast in a horned helmet, gold eyes, a red scarf and a huge red mane of strips streaming
+     back, grey shins, gold claws, blades on its shoulders and hind legs, a bladed tail.
+   SaviorHackmon: a slim knight dragon on two legs in white armour with gold trim, goggles on its horned helmet, a red scarf and V
+     collar, a red gem in its chest, a long red cape, crimson blades on both forearms and on the tail, long pointed blade legs.
+   Jesmon: a Royal Knight in white armour with gold trim, a gold V crest and swept-back horns, a red V on its chest, big round
+     pauldrons, a long red cape, a long red sword in its right hand, a white blade on its left forearm, a sword on its tail, blade legs
+     (its three little flame companions are left out). Forms 3 to 5 have canon proportions and sharp gold eyes. */
+LINE3D.hackmon=(k,f,R,m,s)=>{
+  const {T,M,grp,add,V3,lathe,decal,ell,ellF,stroke,arc,fill,face,poleQ,sph,shell,capG,mix,OUT,INK,WH}=k;
+  const PI=Math.PI,TAU=2*PI,{sin,cos,abs,min,max,hypot,sqrt,pow,atan2,round}=Math;
+  const clamp=(v,a,b)=>max(a,min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,smo=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
+  /* the colours the pixel art (line-hackmon.js) uses too */
+  const PAL={red:'#e8402a',redD:'#a8201a',ring:'#f4f6fb',mark:'#2a1a1a',gEye:'#ffd23a',
+    wh:'#f4f6fb',whD:'#b9c3d6',whK:'#7d889e',
+    cape:'#e8202a',capeD:'#a3111c',capeL:'#ff5a4a',blade:'#c4102a',
+    gold:'#ffcc33',goldD:'#c8870e',eye:'#ffc21a',gem:'#ff3b3b'};
+  const MOUTH='#5a1a22',TONGUE='#f2557a',BLUSH='#ff8fa6',TOOTH='#fbf8f0';
+
+  /* ---------- solids from distance functions: soft unions of ellipsoids ---------- */
+  const smin=(a,b,kk)=>{const h=max(kk-abs(a-b),0)/kk;return min(a,b)-h*h*kk/4},smax=(a,b,kk)=>-smin(-a,-b,kk);
+  // an ellipsoid (centre, radii, optional rotation), roughly its signed distance
+  function sdE(c,r,rot){const [cx,cy,cz]=c,[a,b,d]=r,q=rot&&new T.Matrix4().makeRotationFromEuler(new T.Euler(...rot)).invert().elements;
+    return (x,y,z)=>{x-=cx;y-=cy;z-=cz;if(q){const X=q[0]*x+q[4]*y+q[8]*z,Y=q[1]*x+q[5]*y+q[9]*z;z=q[2]*x+q[6]*y+q[10]*z;x=X;y=Y}
+      const u=x/a,v=y/b,w=z/d,k0=sqrt(u*u+v*v+w*w),k1=sqrt(u*u/(a*a)+v*v/(b*b)+w*w/(d*d));return k1>1e-9?k0*(k0-1)/k1:-min(a,b,d)}}
+  // smooth union of [fn, smoothness] in order
+  const uni=list=>(x,y,z)=>{let d=1e9;for(const [fn,kk] of list){const v=fn(x,y,z);d=kk?smin(d,v,kk):min(d,v)}return d};
+  // S(e): a unit direction from c -> the point on the solid's surface (star-shaped around c), lifted by e (a fraction of the radius)
+  function radial(sd,c,t1=1){const C=V3(...c),f0=sd(C.x,C.y,C.z),g=(w,t)=>sd(C.x+w.x*t,C.y+w.y*t,C.z+w.z*t),memo=new Map();let last=0;
+    const solve=w=>{let a=0,fa=f0,b=t1,fb=null,sd2=0;
+        if(last>0){const a2=last*.92,fa2=g(w,a2);if(fa2<0){const b2=min(t1,last*1.08),fb2=g(w,b2);if(fb2>0){a=a2;fa=fa2;b=b2;fb=fb2}else{a=b2;fa=fb2}}else{b=a2;fb=fa2}}
+        if(fb===null)fb=g(w,b);
+        for(let i=0;i<24&&b-a>1e-5;i++){const t=(a*fb-b*fa)/(fb-fa),ft=g(w,t);if(abs(ft)<1e-5)return t;
+          if(ft>0){b=t;fb=ft;if(sd2<0)fa*=.5;sd2=-1}else{a=t;fa=ft;if(sd2>0)fb*=.5;sd2=1}}return (a*fb-b*fa)/(fb-fa)},
+      r=w=>{const key=round(w.x*1e5+1e5)+200001*(round(w.y*1e5+1e5)+200001*round(w.z*1e5+1e5));let t=memo.get(key);if(t===undefined){t=solve(w);memo.set(key,t)}last=t;return t};
+    const S=e=>w=>C.clone().addScaledVector(w,r(w)*(1+e));S.c=C;return S}
+  // the unit direction from S's centre toward a point
+  const dirTo=(S,x,y,z)=>V3(x-S.c.x,y-S.c.y,z-S.c.z).normalize();
+  const onTo=(S,e,x,y,z)=>S(e)(dirTo(S,x,y,z));
+
+  /* ---------- geometry: smooth shared normals, merged parts with their outlines ---------- */
+  // vertex normals, area weighted, shared by the vertices at the same spot (seams, poles, tips) unless solo
+  function smooth(g,solo){const p=g.attributes.position.array,nv=p.length/3,ix=g.index&&g.index.array,n=new Float32Array(p.length),nt=ix?ix.length:nv;
+    for(let i=0;i<nt;i+=3){const a=(ix?ix[i]:i)*3,b=(ix?ix[i+1]:i+1)*3,c=(ix?ix[i+2]:i+2)*3,ux=p[b]-p[a],uy=p[b+1]-p[a+1],uz=p[b+2]-p[a+2],
+      vx=p[c]-p[a],vy=p[c+1]-p[a+1],vz=p[c+2]-p[a+2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;n[a]+=nx;n[a+1]+=ny;n[a+2]+=nz;n[b]+=nx;n[b+1]+=ny;n[b+2]+=nz;n[c]+=nx;n[c+1]+=ny;n[c+2]+=nz}
+    if(!solo){let sz=64;while(sz<nv*2)sz*=2;const tab=new Int32Array(sz).fill(-1),q=new Int32Array(nv*3),rep=new Int32Array(nv);
+      for(let i=0;i<nv*3;i++)q[i]=round(p[i]*1e4);
+      for(let i=0;i<nv;i++){const x=q[i*3],y=q[i*3+1],z=q[i*3+2];let h=(Math.imul(x,73856093)^Math.imul(y,19349663)^Math.imul(z,83492791))&(sz-1);
+        for(;;){const j=tab[h];if(j<0){tab[h]=i;rep[i]=i;break}if(q[j*3]===x&&q[j*3+1]===y&&q[j*3+2]===z){rep[i]=j;n[j*3]+=n[i*3];n[j*3+1]+=n[i*3+1];n[j*3+2]+=n[i*3+2];break}h=(h+1)&(sz-1)}}
+      for(let i=0;i<nv;i++){const j=rep[i];if(j!==i){n[i*3]=n[j*3];n[i*3+1]=n[j*3+1];n[i*3+2]=n[j*3+2]}}}
+    for(let i=0;i<nv*3;i+=3){const l=hypot(n[i],n[i+1],n[i+2])||1;n[i]/=l;n[i+1]/=l;n[i+2]/=l}
+    g.setAttribute('normal',new T.BufferAttribute(n,3));return g}
+  function geo(pos,idx,solo){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));if(idx)g.setIndex(idx);return smooth(g,solo)}
+  // a sphere mesh moved onto S's surface; asp stretches its directions so long shapes get their share of the vertices
+  function morph(S,ws,hs,asp=[1,1,1]){const g=new T.SphereGeometry(1,ws,hs).rotateY(-PI/2),p=g.attributes.position,w=V3(),F=S(0);
+    for(let i=0;i<p.count;i++){w.fromBufferAttribute(p,i);w.set(w.x*asp[0],w.y*asp[1],w.z*asp[2]).normalize();const q=F(w);p.setXYZ(i,q.x,q.y,q.z)}return smooth(g)}
+  function mergeG(gs){gs=gs.filter(Boolean);let nv=0,ni=0;for(const g of gs){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count}
+    const P=new Float32Array(nv*3),N=new Float32Array(nv*3),I=nv<65000?new Uint16Array(ni):new Uint32Array(ni);let vo=0,io=0;
+    for(const g of gs){if(!g.attributes.normal)smooth(g);const c=g.attributes.position.count;P.set(g.attributes.position.array.subarray(0,c*3),vo*3);N.set(g.attributes.normal.array.subarray(0,c*3),vo*3);
+      if(g.index)for(let i=0;i<g.index.count;i++)I[io++]=g.index.getX(i)+vo;else for(let i=0;i<c;i++)I[io++]=i+vo;vo+=c}
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('normal',new T.BufferAttribute(N,3));g.setIndex(new T.BufferAttribute(I,1));return g}
+  // a part (geometries merged into one mesh) with its outline: a dark shell pushed out along the normals, drawn inside out like the kit's;
+  // crisp: the mesh keeps its own (faceted) normals and the shell uses the normals merged by position, so it has no cracks
+  function part(par,gs,c,ol=.013,kk,crisp){const g=Array.isArray(gs)?mergeG(gs):gs,mesh=add(par,new T.Mesh(g,M(c,kk)));
+    if(ol){let h;if(crisp)h=shell(g,ol);else{const p=g.attributes.position.array,n=g.attributes.normal.array,q=new Float32Array(p.length);for(let i=0;i<p.length;i++)q[i]=p[i]+n[i]*ol;
+        h=new T.BufferGeometry();h.setAttribute('position',new T.BufferAttribute(q,3));h.setIndex(g.index)}
+      add(mesh,new T.Mesh(h,M(OUT,'o'))).userData.ol=1}return mesh}
+  // the matrix pointing +y along d with +z toward cu (like the kit's aim), at p, scaled by sc
+  function basis(p,d,cu,sc){const y=V3(...d).normalize(),z=V3(...(cu||[0,0,1]));z.addScaledVector(y,-z.dot(y));if(z.lengthSq()<1e-8)z.set(1,0,0).addScaledVector(y,-y.x);z.normalize();
+    const mm=new T.Matrix4().makeBasis(V3().crossVectors(y,z),y,z);if(sc)mm.scale(V3(...sc));return mm.setPosition(...p)}
+  const xf=(g,p,d,cu,sc)=>g.applyMatrix4(basis(p,d||[0,1,0],cu,sc));
+  const ellG=(c,r,rot,ws,hs)=>{const mr=max(...r);ws=ws||(mr>.12?20:mr>.06?14:10);hs=hs||Math.round(ws*.67);const g=new T.SphereGeometry(1,ws,hs).scale(...r);if(rot)g.applyMatrix4(new T.Matrix4().makeRotationFromEuler(new T.Euler(...rot)));return g.translate(...c)};
+  const bend=(g,kk)=>{const p=g.attributes.position.array;for(let i=0;i<p.length;i+=3)p[i+2]+=kk*p[i+1]*p[i+1];return g};
+  // a claw or horn: a rounded cone along +y bent toward +z, thinner sideways (fx)
+  const clawG=(r,h,kk=.4,fx=.75,seg=8)=>smooth(bend(lathe([[0,0],[r,0],[r*.97,h*.2],[r*.82,h*.45],[r*.55,h*.7],[r*.26,h*.9],[0,h]],seg).scale(fx,1,1),kk/h));
+  const ringG=(r,t,p,d,rs=6,ts=20)=>xf(new T.TorusGeometry(r,t,rs,ts).rotateX(PI/2),p,d);
+
+  /* ---------- tubes along curves: limbs, necks, tails, horns, locks ---------- */
+  // a tube through pts, radius rf(t) (or [sideways, up] radii) for t in 0..1 (only t0..t1 of it is made); its sideways axis is ref made
+  // square to the curve, "up" square to both. at(t,a,e): the point at angle a (0 up, PI/2 sideways) lifted by e. ends: more rings near the ends
+  function sweep(pts,rf,o={}){const n=o.n||20,rs=o.rs||12,t0=o.t0||0,t1=o.t1==null?1:o.t1,cu=new T.CatmullRomCurve3(pts.map(a=>a.isVector3?a:V3(...a)),!!o.closed,'catmullrom',o.tn==null?.5:o.tn),
+      ref=V3(...(!o.ref||typeof o.ref==='function'?[1,0,0]:o.ref)).normalize(),R2=t=>{const r=typeof rf==='function'?rf(t):rf;return typeof r==='number'?[r,r]:r},
+      fr=t=>{const c=cu.getPointAt(t),tg=cu.getTangentAt(t),rr=typeof o.ref==='function'?V3(...o.ref(t,c)).normalize():ref,sd=rr.clone().addScaledVector(tg,-rr.dot(tg));if(sd.lengthSq()<1e-8)sd.set(0,0,1);sd.normalize();return [c,sd,V3().crossVectors(sd,tg),tg]},
+      at=(t,a,e=0)=>{t=clamp(t,0,1);const [c,sd,up]=fr(t),r=R2(t);return c.addScaledVector(up,cos(a)*r[1]*(1+e)).addScaledVector(sd,sin(a)*r[0]*(1+e))};
+    const pos=[],idx=[],N=o.closed?n:n+1;
+    for(let i=0;i<N;i++){const u=o.ends?(1-cos(PI*i/n))/2:i/n,t=lerp(t0,t1,u),[c,sd,up]=fr(t),r=R2(t);
+      for(let j=0;j<rs;j++){const a=j/rs*TAU,ca=cos(a)*r[1],sa=sin(a)*r[0];pos.push(c.x+up.x*ca+sd.x*sa,c.y+up.y*ca+sd.y*sa,c.z+up.z*ca+sd.z*sa)}}
+    for(let i=0;i<n;i++)for(let j=0;j<rs;j++){const a=i*rs+j,b=i*rs+(j+1)%rs,a2=((i+1)%N)*rs+j,b2=((i+1)%N)*rs+(j+1)%rs;idx.push(a,b,a2,b,b2,a2)}
+    return {g:geo(pos,idx),at,fr,len:cu.getLength()}}
+  // rounded ends for a radius profile: hemispheres of radius ra at t=0 and rb at t=1 on a tube of length L
+  const ends=(t,L,ra,rb)=>{let k2=1;const s0=t*L,s1=(1-t)*L;if(ra&&s0<ra)k2*=sqrt(max(0,1-(1-s0/ra)**2));if(rb&&s1<rb)k2*=sqrt(max(0,1-(1-s1/rb)**2));return k2};
+
+  /* ---------- surface pieces: decals made as geometry (one mesh per colour), bands and patches on a surface ---------- */
+  function decalG(d,sh,S){const D=V3(...d).normalize(),U=V3(0,1,0).cross(D).normalize(),W=V3().crossVectors(D,U),w=V3(),pos=[];
+    for(let j=0;j<sh.v.length;j+=2){const p=S(w.copy(D).addScaledVector(U,sh.v[j]).addScaledVector(W,sh.v[j+1]).normalize());pos.push(p.x,p.y,p.z)}return geo(pos,sh.i,1)}
+  const DM=(par,c,gs,kk='')=>add(par,new T.Mesh(mergeG(gs),M(c,kk)));
+  const sub=(p,n=4)=>{const o=[];for(let i=0;i+3<p.length;i+=2)for(let j=0;j<n;j++){const t=j/n;o.push(lerp(p[i],p[i+2],t),lerp(p[i+1],p[i+3],t))}o.push(p[p.length-2],p[p.length-1]);return o};
+  const poly=pts=>{let cx=0,cy=0;for(const [x,y] of pts){cx+=x;cy+=y}return fill(pts.flat(),cx/pts.length,cy/pts.length)};
+  // decal shapes are drawn with +x toward the front (+z): on the -x side of a body that is mirrored (fx = -1 where needed)
+  const sideFx=d=>V3(0,1,0).cross(V3(...d).normalize()).z>0?1:-1;
+  const mirP=(pts,fx)=>{const q=pts.map(([x,y])=>[x*fx,y]);return fx<0?q.reverse():q};
+  const mirS=(p,fx)=>p.map((v,i)=>i%2?v:v*fx);
+  // a band on surface S (unit direction -> point) between the polar angles a(ph) and b(ph) round a pole
+  function bandG(S,pole,a,b,nu=48,nv=3){const q=poleQ(pole),P=[],I=[];
+    for(let i=0;i<=nu;i++){const ph=-PI+i/nu*TAU,A=a(ph),B=b(ph);for(let j=0;j<=nv;j++){const p=S(sph(A+(B-A)*j/nv,ph,q));P.push(p.x,p.y,p.z)}}
+    for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const x=i*(nv+1)+j,y=x+nv+1;I.push(x,x+1,y,y,x+1,y+1)}
+    return geo(P,I)}
+  // the polar angle round pole at which surface S reaches height y (going from the pole), for angle ph
+  function polarAtY(S,pole,ph,y,a0=.02,a1=PI-.02){const q=poleQ(pole),f=a=>S(sph(a,ph,q)).y-y;let fa=f(a0);for(let i=0;i<30;i++){const md=(a0+a1)/2,fm=f(md);if((fm>0)===(fa>0)){a0=md;fa=fm}else a1=md}return (a0+a1)/2}
+
+  // a patch of surface S round direction d inside the outline pts (decal coordinates, star-shaped round 0,0), and its rim points
+  function capP(S,d,pts,nu=48,nv=10){const D=V3(...d).normalize(),U=V3(0,1,0).cross(D).normalize(),W=V3().crossVectors(D,U),pos=[],idx=[],rim=[],w=V3(),
+      rr=a=>{const cx=cos(a),cy=sin(a);let b=9;for(let i=0;i<pts.length;i++){const [x0,y0]=pts[i],[x1,y1]=pts[(i+1)%pts.length],ex=x1-x0,ey=y1-y0,dn=cx*ey-cy*ex;if(abs(dn)<1e-12)continue;
+        const t=(x0*ey-ex*y0)/dn,u=(cy*x0-cx*y0)/dn;if(t>0&&u>=-1e-9&&u<=1+1e-9)b=min(b,t)}return b};
+    for(let i=0;i<=nu;i++){const a=i/nu*TAU,ca=cos(a),sa=sin(a),r=rr(a);for(let j=0;j<=nv;j++){const t=r*j/nv,p=S(w.copy(D).addScaledVector(U,ca*t).addScaledVector(W,sa*t).normalize());pos.push(p.x,p.y,p.z);if(j===nv&&i<nu)rim.push(p.toArray())}}
+    for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const a=i*(nv+1)+j,b=a+nv+1;idx.push(a,a+1,b,a+1,b+1,b)}
+    return {g:geo(pos,idx),rim}}
+  // a fan of flame fins round the axis point O (along z): [fan angle a (0 up), root distance r0, length L, half-width w, rise, tip flick, z offset,
+  // taper, turn b, lift (an arc up from the root first), twist (more turn toward the tip)]; th: the half thickness; up: every tip curls up by this much. With b=0 a fin's broad side lies in the plane of its fan direction and the axis (it shows its
+  // shape from the side when it points up); b=PI/2 turns it square to that (a fin pointing sideways then shows its shape from the side and front)
+  function fins(O,list,th=.024,n=16,up=0){return list.map(([a,r0,L,w,rise,flick,zb=0,p=.85,b=0,lift=0,tw=0])=>{const d=V3(sin(a),cos(a),0),P=[];
+      for(let i=0;i<=8;i++){const t=i/8;P.push(V3(O[0],O[1]+up*pow(t,2.5),O[2]+zb-L*t).addScaledVector(d,r0+lift*sin(PI/2*min(1,t/.45))+rise*t*t+flick*pow(t,4)))}
+      const wf=lockW(w,p),ref=t=>{const q=b+tw*t;return [d.y*cos(q)+d.x*sin(q),-d.x*cos(q)+d.y*sin(q),0]};
+      return sweep(P,t=>[th*(1-.6*t)*min(1,.4+t*5)+.002,wf(t)+.002],{n,rs:12,ref}).g})}
+  /* ---------- faces ---------- */
+  // a cute mouth (R.mouths): shut, a stroke (sw, decal points); open, dark red with a pink tongue; fangs [x] hang from the top edge
+  function cuteMouth(par,S,d,w,hh,sw,fangs=[],e=.006){const ms=grp(par),mo=grp(par),b=[];mo.visible=false;R.mouths=[ms,mo];
+    const ln=[decalG(d,stroke(sw,hh*.3),S(e))],ft=[];
+    for(let j=0;j<=12;j++){const a=PI+j/12*PI;b.push(cos(a)*w,sin(a)*hh)}
+    for(let j=1;j<8;j++){const x=w*(1-j/4);b.push(x,-hh*.22*(1-(x/w)**2))}
+    DM(mo,MOUTH,[decalG(d,fill(b,0,-hh*.45),S(e))],'b');DM(mo,TONGUE,[decalG(d,ell(0,-hh*.66,w*.5,hh*.3),S(e+.004))],'b');
+    for(const [x,y0,fw,fh] of fangs){ft.push(decalG(d,fill([x-fw,y0,x+fw,y0,x,y0-fh],x,y0-fh*.35,2),S(e+.008)))}
+    DM(ms,OUT,ln,'b');if(ft.length){DM(ms,'#ffffff',ft.map(g=>g.clone()),'b');DM(mo,'#ffffff',ft,'b')}}
+
+  /* ---------- 1. Gigimon ---------- */
+  function baby(){const B=PAL.red,K=PAL.mark;R.h=.66;R.sc=.41;R.d=.82;
+    // the round body, wider at the bottom and longer behind, its bottom flattened above its little feet
+    const C=[0,.24,0],sd=uni([[sdE([0,.25,.03],[.29,.23,.27]),0],[sdE([0,.15,-.03],[.305,.145,.28]),.1],[sdE([0,.21,-.12],[.24,.18,.2]),.08]]),
+      S=radial((x,y,z)=>smax(sd(x,y,z),.035-y,.05),C,1);
+    part(m,[morph(S,56,42)],B,.014);
+    // the white belly ring round its bottom
+    const pole=[0,-1,0],y0=.05,y1=.105,A=ph=>polarAtY(S(.012),pole,ph,y0,.05,2.2),Bq=ph=>polarAtY(S(.012),pole,ph,y1,.05,2.2);
+    part(m,[bandG(S(.012),pole,A,Bq,64,3)],PAL.ring,.01);
+    // big yellow eyes with black pupils and two shines, a little blush
+    face(R,{add:o=>m.add(o)},{eye:PAL.gEye},{iris:1,ex:.47,ey:.2,rx:.2,ry:.25,bx:.8,by:-.12,brx:.12,bry:.07,S});
+    // a happy zigzag mouth with one tiny fang; open, a red mouth and pink tongue, the fang still showing
+    const md=[0,-.17,1],zz=[-.2,.04,-.14,-.006,-.07,.016,0,-.03,.07,.016,.14,-.006,.2,.04];
+    cuteMouth(m,S,md,.17,.19,sub(zz,3),[[.07,.006,.034,.07]]);
+    // a black triangle mark on each side, behind the eye
+    const tm=[];for(const sx of[-1,1]){const d=[sx,-.02,.32],fx=sideFx(d);tm.push(decalG(d,poly(mirP([[.17,.06],[-.13,.19],[-.07,-.13]],fx)),S(.008)))}
+    DM(m,K,tm);
+    // the big bat-wing ears, jagged at the back edge, standing up (they wiggle)
+    for(const sx of[-1,1]){const ear=new T.Shape(),P=(fn,...a)=>ear[fn](...a.map((v,i)=>i%2?v:v*sx));
+      P('moveTo',-.075,0);P('quadraticCurveTo',-.085,.17,.0,.3);P('lineTo',.045,.2);P('lineTo',.13,.235);P('lineTo',.1,.13);P('lineTo',.18,.125);P('quadraticCurveTo',.11,.05,.075,0);P('lineTo',-.075,0);
+      const eg=new T.ExtrudeGeometry(ear,{depth:.032,bevelEnabled:true,bevelThickness:.013,bevelSize:.012,bevelSegments:2,curveSegments:8});eg.translate(0,0,-.016);
+      {const p=eg.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i);p.setZ(i,p.getZ(i)-.45*x*x-.25*y*y)}}smooth(eg);
+      const at=onTo(S,-.04,sx*.15,.43,-.03),g=grp(m,[at.x,at.y,at.z],[-.2,sx*.5,-sx*.32]);g.userData.z=-sx*.32;R.ears.push(g);
+      part(g,[eg],B,.012)}
+    // four stubby feet: front-left, front-right, back-right, back-left (so it trots)
+    for(const [x,z] of[[-.14,.12],[.14,.12],[.15,-.13],[-.15,-.13]]){const l=grp(m,[x,.08,z]);R.legs.push(l);part(l,[ellG([0,-.035,.01],[.07,.05,.075])],B,.011)}
+    // the short tail curling up behind, its tip black
+    const tw=R.tail=grp(m,[0,.17,-.22]),tp=[[0,-.02,.08],[0,0,-.06],[0,.05,-.17],[0,.15,-.24],[0,.27,-.25],[0,.35,-.21]],rf=t=>.098*pow(1-t,.5)*(1+.15*sin(PI*t))*ends(t,.5,0,.03)+.004;
+    part(tw,[sweep(tp,rf,{t1:.68,n:16,rs:14}).g],B,.013);part(tw,[sweep(tp,rf,{t0:.68,n:10,rs:14}).g],K,.013)}
+
+  /* flame-like locks for capes and manes: [points, root half-width, half-thickness, ref (the width's direction, or a function of t)],
+     each tapering to a sharp tip */
+  const lockW=(w,p=.8)=>t=>w*(.72+.28*sin(PI*min(1,t*1.7)))*pow(1-t,p);
+  function locks(L,n=18,rs=10){return L.map(([pts,w,th,ref,p])=>{const wf=lockW(w,p);return sweep(pts,t=>[wf(t)+.002,th*(1-.7*t)*min(1,.4+t*5)+.002],{n,rs,ref}).g})}
+  /* a thick sheet (capes): P(u,v) its middle surface over u,v in 0..1, th its half thickness (or th(u,v)); the outer side faces along Pu x Pv */
+  function sheetG(P,nu,nv,th){const mid=[],nor=[],e=1e-3,N=(nu+1)*(nv+1),id=(s,i,j)=>s*N+i*(nv+1)+j,pos=[],idx=[];
+    for(let i=0;i<=nu;i++)for(let j=0;j<=nv;j++){const u=i/nu,v=j/nv,p=V3(...P(u,v)),pu=V3(...P(min(1,u+e),v)).sub(V3(...P(max(0,u-e),v))),pv=V3(...P(u,min(1,v+e))).sub(V3(...P(u,max(0,v-e))));
+      mid.push(p);nor.push(V3().crossVectors(pu,pv).normalize())}
+    for(const sg of[1,-1])for(let i=0;i<=nu;i++)for(let j=0;j<=nv;j++){const q=i*(nv+1)+j,p=mid[q],n=nor[q],t=(typeof th==='function'?th(i/nu,j/nv):th)*sg;pos.push(p.x+n.x*t,p.y+n.y*t,p.z+n.z*t)}
+    for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const a=id(0,i,j),b=id(0,i+1,j),c=id(0,i+1,j+1),d=id(0,i,j+1);idx.push(a,b,c,a,c,d,a+N,c+N,b+N,a+N,d+N,c+N)}
+    const rim=[];for(let i=0;i<nu;i++)rim.push([i,0]);for(let j=0;j<nv;j++)rim.push([nu,j]);for(let i=nu;i>0;i--)rim.push([i,nv]);for(let j=nv;j>0;j--)rim.push([0,j]);
+    for(let q=0;q<rim.length;q++){const [i0,j0]=rim[q],[i1,j1]=rim[(q+1)%rim.length],a=id(0,i0,j0),b=id(0,i1,j1);idx.push(a,a+N,b+N,a,b+N,b)}
+    return geo(pos,idx)}
+  // a sawtooth hem: 0 at the notches, 1 at the points, n points across
+  const saw=(u,n)=>{const q=u*n-Math.floor(u*n);return 1-abs(2*q-1)};
+
+  // the direction (from S's centre) at x, y (decal units) round the eye direction d: E(x,y)
+  const eyeF=(S,d)=>{const D=V3(...d).normalize(),U=V3(0,1,0).cross(D).normalize(),W=V3().crossVectors(D,U);return (x,y)=>D.clone().addScaledVector(U,x).addScaledVector(W,y).normalize().toArray()};
+  // a painted stripe on surface S along a curve through directions (from S's centre), half-width w(t) (in direction units), m strips
+  // across (wide stripes need several to follow the curve of the surface); its normals are the surface's
+  function stripeG(S,dirs,wf,n=24,m=1){const cu=new T.CatmullRomCurve3(dirs.map(a=>V3(...a).normalize())),pos=[],idx=[],nor=[],e=.01,
+      nrm=d=>{const a=V3(0,1,0).cross(d);if(a.lengthSq()<1e-6)a.set(1,0,0);a.normalize();const b=V3().crossVectors(d,a),
+        pa=S(d.clone().addScaledVector(a,e).normalize()).sub(S(d.clone().addScaledVector(a,-e).normalize())),
+        pb=S(d.clone().addScaledVector(b,e).normalize()).sub(S(d.clone().addScaledVector(b,-e).normalize())),nn=V3().crossVectors(pa,pb).normalize();return nn.dot(d)<0?nn.negate():nn};
+    for(let i=0;i<=n;i++){const t=i/n,p=cu.getPointAt(t).normalize(),tg=cu.getTangentAt(t),sd=V3().crossVectors(p,tg).normalize(),w=typeof wf==='function'?wf(t):wf;
+      for(let j=0;j<=m;j++){const d=p.clone().addScaledVector(sd,(2*j/m-1)*w).normalize(),q=S(d),nn=nrm(d);pos.push(q.x,q.y,q.z);nor.push(nn.x,nn.y,nn.z)}}
+    for(let i=0;i<n;i++)for(let j=0;j<m;j++){const a=i*(m+1)+j,b=a+m+1;idx.push(a,b+1,a+1,a,b,b+1)}
+    const g=geo(pos,idx,1);g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));return g}
+  // a flame cape, P(u,v) for sheetG: a bell round the axis along -z at height y from z (v=0, radii r0 = [x, y]) flaring to r1, over the
+  // angles -A..A from the top; its hem (v=1) cut into n flame points L+Lp long (notches L), the tips curling out and up
+  const flameCape=o=>(u,v)=>{const fl=pow(saw(u,o.n),1.4),a=(u-.5)*2*o.A,s3=v*v*v,L=o.L+o.Lp*fl,sv=smo(v),
+      rx=lerp(o.r0[0],o.r1[0],sv)+o.out*fl*s3,ry=lerp(o.r0[1],o.r1[1],sv)+o.out*fl*s3;
+    return [sin(a)*rx,o.y+(o.dy||0)*v+o.lift*fl*s3+cos(a)*ry,o.z-v*L]};
+
+  /* ---------- 2. Hackmon ---------- */
+  function rookie(){const W=PAL.wh,WD=PAL.whD,Rd=PAL.cape;R.h=1.02;R.sc=.36;R.d=1.15;
+    // a small low body crouching like a puppy, the chest up under the big head
+    const BS=radial(uni([[sdE([0,.27,-.06],[.155,.13,.2]),0],[sdE([0,.31,.07],[.14,.14,.12]),.08]]),[0,.28,0],1);
+    part(m,[morph(BS,36,26)],W,.013);
+    // four short stout legs: front-left, front-right, back-right, back-left (so it trots); white paws with three claws, grey pads at the knees
+    for(const [sx,z,bk] of[[-1,.1,0],[1,.1,0],[1,-.17,1],[-1,-.17,1]]){const l=grp(m,[sx*.1,.24,z]);R.legs.push(l);
+      const top=bk?ellG([sx*.015,0,-.01],[.08,.1,.11]):ellG([0,0,0],[.065,.07,.07]);
+      const lg=sweep([[0,-.02,bk?.02:0],[0,-.1,bk?.045:.015],[0,-.17,bk?.06:.035]],t=>.056-.006*t,{n:8,rs:12});
+      const py=-.2,pz=bk?.08:.055;
+      part(l,[top,lg.g,ellG([0,py,pz],[.064,.04,.08])],W,.012);
+      const cl=[];for(const i of[-1,0,1])cl.push(xf(clawG(.018,.05,.25,.85),[i*.034,py-.012,pz+.068-abs(i)*.012],[i*.25,-.25,1],[0,-1,0]));
+      part(l,cl,W,.007)}
+    // a white tail out behind, under the cape
+    const tw=R.tail=grp(m,[0,.25,-.24]),tl=sweep([[0,0,.06],[0,-.01,-.06],[0,.01,-.17],[0,.06,-.27]],t=>.065*pow(1-t,.75)+.003,{n:12,rs:12});
+    part(tw,[tl.g],W,.012);
+    // the big head: a round skull and a short dragon snout, white like armour
+    const hd=R.head=grp(m,[0,.37,.14]),HS=radial(uni([[sdE([0,.2,-.03],[.225,.19,.205]),0],[sdE([0,.27,.01],[.18,.12,.17]),.06],
+      [sdE([0,.1,.15],[.14,.1,.165]),.08],[sdE([.12,.1,.03],[.1,.1,.11]),.05],[sdE([-.12,.1,.03],[.1,.1,.11]),.05]]),[0,.16,.02],1);
+    part(hd,[morph(HS,48,36)],W,.013);
+    // big golden eyes, a little blush; a small smile with a tiny fang, open: tongue and fang; two small nostrils
+    face(R,{add:o=>hd.add(o)},{eye:PAL.eye},{iris:1,ex:.52,ey:.2,rx:.19,ry:.24,bx:1.05,by:-.22,brx:.11,bry:.065,S:HS});
+    cuteMouth(hd,HS,[0,-.36,1],.12,.13,sub(arc(0,.08,.13,PI*1.25,PI*1.75,6),2),[[.045,0,.02,.042]]);
+    DM(hd,'#3a2a2a',[-1,1].map(sx=>decalG([sx*.13,-.02,1],ell(0,0,.03,.02),HS(.006))),'b');
+    // red marks: a stripe over each eye running back along the head, and one under it along the cheek
+    const mk=[];for(const sx of[-1,1]){const E=eyeF(HS,[sx*.52,.2,1]),Q=(x,y)=>E(sx*x,y);
+      mk.push(stripeG(HS(.009),[Q(-.2,.34),Q(.05,.37),Q(.3,.36),Q(.55,.3),Q(.8,.24)],t=>.05*min(1,(1-t)*3,.35+t*4)));
+      mk.push(stripeG(HS(.009),[Q(.12,-.34),Q(.35,-.33),Q(.6,-.26),Q(.85,-.2)],t=>.045*min(1,(1-t)*3,.3+t*4)))}
+    DM(hd,Rd,mk);
+    // the tall pointed horn from the top of the head, rising and curving back like a crescent
+    const hb=onTo(HS,-.06,0,.38,.07),hg=grp(hd,[hb.x,hb.y,hb.z]),hp=[[0,-.03,.02],[0,.09,0],[0,.19,-.045],[0,.27,-.12],[0,.31,-.21]];
+    const hrf=t=>{const r=pow(1-t,.8);return [.048*r+.002,.11*r+.002]};
+    part(hg,[sweep(hp,hrf,{n:18,rs:14,ref:[1,0,0]}).g],W,.012);
+    // two small spikes at the back of the head
+    const sp=[];for(const sx of[-1,1]){const b=onTo(HS,-.05,sx*.12,.3,-.14);sp.push(xf(clawG(.045,.13,.06,.7),[b.x,b.y,b.z],[sx*.45,.35,-1],[0,1,0]))}
+    part(hd,sp,W,.01);
+    // a red scarf round the neck
+    part(m,[sweep([[0,.43,.21],[.125,.4,.14],[.14,.37,.01],[0,.4,-.05],[-.14,.37,.01],[-.125,.4,.14]],[.036,.03],{closed:1,n:30,rs:10,ref:[0,1,0]}).g],Rd,.012);
+    // the red hood over the nape, where the cape starts
+    const hood=capP(HS(.03),[0,.05,-1],[[0,.7],[-.45,.62],[-.78,.35],[-.85,0],[-.75,-.45],[-.4,-.7],[0,-.75],[.4,-.7],[.75,-.45],[.85,0],[.78,.35],[.45,.62]],40,6);
+    part(hd,[hood.g],Rd,.01);
+    // the big cape: a cloth bell from the neck flaring back over the body, its hem cut into flame points that curl out and up
+    part(m,[sheetG(flameCape({y:.34,dy:-.04,z:.05,A:1.9,n:5,r0:[.17,.15],r1:[.25,.24],L:.26,Lp:.14,out:.04,lift:.03}),50,14,(u,v)=>.013*(1-.35*v))],Rd,.012);
+    // and big flame tufts streaming back from the shoulders: two up the middle, two up and out, two out to the sides (the wings seen from the front)
+    part(m,fins([0,.3,.05],[[.22,.17,.56,.16,.2,.1,0,.6,.15],[-.22,.17,.53,.15,.19,.1,.01,.6,-.15],[.95,.17,.52,.16,.19,.08,-.01,.6,.6],[-.95,.17,.52,.16,.19,.08,-.01,.6,-.6],
+      [1.75,.17,.46,.15,.16,.07,-.02,.6,1.3],[-1.75,.17,.46,.15,.16,.07,-.02,.6,-1.3]],.05,18,.1),Rd,.012)}
+
+  /* ---------- canon eyes (forms 3 to 5): an almond (its front corner lower and sharper) in a dark socket, a pale eyeball, the gold iris
+     cut by the lids, a dark pupil and one small shine; shut: one dark lid line; happy: the same eye narrowed by the lids (a confident grin) ---------- */
+  function clip(sb,cl){let out=sb;for(let i=0;i<cl.length&&out.length;i++){const A=cl[i],B=cl[(i+1)%cl.length],side=p=>(B[0]-A[0])*(p[1]-A[1])-(B[1]-A[1])*(p[0]-A[0]),inp=out;out=[];
+      for(let j=0;j<inp.length;j++){const P=inp[j],Q=inp[(j+1)%inp.length],a=side(P),b=side(Q);if(a>=0)out.push(P);if((a>=0)!==(b>=0)){const t=a/(a-b);out.push([P[0]+(Q[0]-P[0])*t,P[1]+(Q[1]-P[1])*t])}}}return out}
+  function almond(w,h,up=1,lo=1,o={}){const n=18,top=[],bot=[],by=o.by==null?.2:o.by,fy=o.fy==null?-.32:o.fy;
+    for(let i=0;i<=n;i++){const t=i/n,x=-w+2*w*t,y0=h*lerp(by,fy,t),sn=sin(PI*t);top.push([x,y0+h*up*pow(sn,.62)*(1-.3*t)]);bot.push([x,y0-h*.62*lo*pow(sn,.85)])}
+    return [...bot,...top.reverse().slice(1,-1)]}
+  const circ=(cx,cy,rx,ry,n=22)=>{const p=[];for(let j=0;j<n;j++){const a=j/n*TAU;p.push([cx+cos(a)*rx,cy+sin(a)*ry])}return p};
+  // the point at shape coordinates (x,y) round direction d on surface fn
+  const onS=(d,x,y,fn)=>{const D=V3(...d).normalize(),U=V3(0,1,0).cross(D).normalize(),W=V3().crossVectors(D,U);return fn(D.addScaledVector(U,x).addScaledVector(W,y).normalize())};
+  // o: d (the +x eye's direction), w, h, eye (iris colour), lid (skin colour), socket, brow (a ridge colour) and its shape b0, by0, ba, bw
+  function eyes(par,S,o){const eo=grp(par),es=grp(par),eh=grp(par),L=new Map();es.visible=eh.visible=false;R.eyes=[eo,es,eh];
+    const put=(g,c,gm)=>{const key=g.uuid+c;if(!L.has(key))L.set(key,[g,c,[]]);L.get(key)[2].push(gm)};
+    const {w,h}=o,ir=o.ir||h*.9,ix=w*.1,iy=-h*.06,sock=grp(par),brow=[];
+    for(const sx of[-1,1]){const d=[sx*o.d[0],o.d[1],o.d[2]],fx=sideFx(d),P=(g,c,pts,e)=>{if(pts.length>2)put(g,c,decalG(d,poly(mirP(pts,fx)),S(e)))};
+      const A=almond(w,h),Ah=almond(w,h,.42,.8);
+      P(sock,o.socket||'#2a1418',almond(w*(o.sw||1.2),h*(o.sh||1.45),1,1,{fy:-.36}),0);
+      const ball=(g,B,e)=>{P(g,o.white||'#fff6e0',B,e);P(g,o.eye,clip(circ(ix,iy,ir*.9,ir),B),e+.004);
+        P(g,o.pupil||INK,clip(circ(ix+w*.04,iy,ir*(o.slit||.5),ir*.66),B),e+.008);P(g,'#ffffff',clip(circ(ix+ir*.4,iy+ir*.38,ir*.2,ir*.18,10),B),e+.012)};
+      ball(eo,A,.004);
+      P(es,o.lid,A,.004);const lid=[];for(let i=0;i<=10;i++){const t=i/10;lid.push(lerp(-w*1.02,w*1.02,t)*fx,h*lerp(.1,-.34,t)-h*.25*sin(PI*t))}put(es,INK,decalG(d,stroke(lid,h*.3),S(.008)));
+      P(eh,o.lid,A,.004);P(eh,INK,almond(w*1.06,h*1.12,.46,.86),.006);ball(eh,Ah,.008);
+      if(o.brow){const pts=[],b0=o.b0==null?1.3:o.b0,by0=o.by0==null?.25:o.by0,ba=o.ba==null?1.25:o.ba,bl=o.bl||0;
+        for(let i=0;i<=5;i++){const t=i/5,x=lerp(-w*b0,w*1.15,t),y=h*(lerp(by0,-.3,t)+ba*pow(sin(PI*lerp(.08,.92,t)),.6)+.15+bl);const q=onS(d,x*fx,y,S(.03));pts.push([q.x,q.y,q.z])}
+        brow.push(sweep(pts,t=>(o.bw||.03)*(.4+.6*pow(sin(PI*t),.7))*(1+.25*t),{n:14,rs:10,ref:[0,1,0]}).g)}}
+    for(const [g,c,list] of L.values())DM(g,c,list,'b');
+    if(brow.length)part(par,brow,o.brow,.01)}
+  const toothG=(r,h)=>smooth(lathe([[0,0],[r,0],[r*.82,h*.4],[r*.42,h*.76],[0,h]],6));
+  const taper=(fn,z0,z1,amt)=>(x,y,z)=>fn(x/(1-amt*clamp((z-z0)/(z1-z0),0,1)),y,z);
+
+  /* ---------- a beast's head in a helmet (forms 3 to 5) ----------
+     The skin is the top shapes (skull, snout, cheeks) cut flat at the mouth line ym, with the low shapes (throat) under the back; the jaw
+     hinges at hz with fangs on its rim, the upper fangs hang from the snout's rim; the helmet covers the skin above the line yb(z), its rim a
+     tube; then horns (sweeps with [sideways, up] radii, so they can be flat blades), marks, nostrils and the eyes. Returns the surfaces. */
+  function beastHead(par,H){const hd=R.head=grp(par,H.at),ym=H.ym,top=uni(H.top),low=uni(H.low),
+      sd=(x,y,z)=>smin(smax(top(x,y,z),ym-y,.012),low(x,y,z),H.kl||.05),S=radial(sd,H.c,1),Sh=e=>S(H.hl+e),col=new Map(),
+      put=(c,g)=>{if(!col.has(c))col.set(c,[]);col.get(c).push(g)};
+    put(H.skin,morph(S,H.nu||56,H.nv||42,H.asp));
+    const [jx,jy,jz]=H.jr,jc=H.jc,jw=R.jaw=grp(hd,[0,ym,H.hz]);jw.userData.a=H.ja||.42;
+    part(jw,[new T.SphereGeometry(1,28,12,0,TAU,PI/2,PI/2).scale(jx,jy,jz).translate(0,0,jc)],H.jawC||H.skin,.012);
+    add(jw,new T.Mesh(new T.CircleGeometry(1,28).rotateX(-PI/2).scale(jx*.96,1,jz*.96).translate(0,.002,jc),M(MOUTH,'b')));
+    part(jw,[ellG([0,.004,jc+jz*.05],[jx*.55,.02,jz*.6])],TONGUE,0);
+    const lt=[];for(const [a,r,hh] of H.lteeth||[])for(const sx of[-1,1])lt.push(xf(toothG(r,hh),[sx*sin(a)*jx*.84,-.004,jc+cos(a)*jz*.88],[sx*sin(a)*.2,1,0]));
+    if(lt.length)part(jw,lt,TOOTH,.004);
+    part(hd,[ellG([0,ym,H.hz+jc],[jx*.9,jy*.5,jz*.92])],MOUTH,0);
+    const rim=a=>{const dx=sin(a),dz=cos(a);let lo2=0,hi=.8;for(let i=0;i<16;i++){const t=(lo2+hi)/2;if(sd(dx*t,ym+.004,H.rz+dz*t)<0)lo2=t;else hi=t}return [dx*lo2,ym,H.rz+dz*lo2]};
+    for(const [a,r,hh] of H.teeth||[])for(const sx of[-1,1]){const p=rim(sx*a);put(TOOTH,xf(toothG(r,hh),[p[0]*.92,ym+.008,p[2]-.008*cos(a)],[-sx*sin(a)*.15,-1,0]))}
+    // the helmet
+    const edge0=ph=>{let a=.15,b=PI-.05;for(let i=0;i<14;i++){const t=(a+b)/2,p=Sh(0)(V3(sin(t)*sin(ph),cos(t),sin(t)*cos(ph)));if(p.y>H.yb(p.z,p.x))a=t;else b=t}return a};
+    const ec=new Map(),edge=ph=>{const kk=round(ph*1e4);if(!ec.has(kk))ec.set(kk,edge0(ph));return ec.get(kk)};
+    put(H.helm,smooth(capG(Sh(0),edge,null,[],H.hu||72,H.hv||22)));
+    const rp=[];for(let i=0;i<72;i++){const ph=-PI+i/72*TAU,t=edge(ph);rp.push(Sh(.012)(V3(sin(t)*sin(ph),cos(t),sin(t)*cos(ph))).toArray())}
+    part(hd,[sweep(rp,H.rimW||.011,{closed:1,n:72,rs:6,ref:[0,1,0]}).g],H.rim,.008);
+    // horns: [direction of the base, path from there, radius ([sideways, up] or a number), colour, ref, taper]
+    for(const [dir,path,r,c,ref,p] of H.horns||[]){const b=Sh(-.01)(V3(...dir).normalize()),pts=path.map(([x,y,z])=>[b.x+x,b.y+y,b.z+z]),rr=typeof r==='number'?[r,r]:r;
+      put(c||H.helm,sweep(pts,t=>{const q=pow(1-t,p||.85);return [rr[0]*q+.002,rr[1]*q+.002]},{n:18,rs:12,ref:ref||[1,0,0]}).g)}
+    for(const [c,list] of col)part(hd,list,c,c===TOOTH?.004:.013);
+    if(H.nose)DM(hd,'#2a1a1a',[-1,1].map(sx=>decalG([sx*H.nose[0],H.nose[1],H.nose[2]],ell(0,0,H.nose[3],H.nose[3]*.55,sx*.4),Sh(.012))),'b');
+    eyes(hd,e=>Sh(.014+e),{lid:H.skin,...H.eye});
+    return {S,Sh,hd}}
+
+  /* ---------- 3. BaoHackmon ---------- */
+  function champion(){const W=PAL.wh,WD=PAL.whD,WK=PAL.whK,Rd=PAL.cape,G=PAL.gold,SK=mix(PAL.wh,PAL.whD,.4);
+    R.h=1.1;R.sc=.42;R.w=1;R.d=2.3;
+    // the body of a big hunting beast: a deep chest, broad shoulders, a tucked waist, strong haunches; grey underneath
+    const TS=radial(uni([[sdE([0,.6,.26],[.235,.23,.22]),0],[sdE([0,.6,-.04],[.165,.16,.25]),.12],[sdE([0,.62,-.34],[.2,.19,.2]),.12],
+      [sdE([.14,.68,.25],[.12,.14,.16]),.05],[sdE([-.14,.68,.25],[.12,.14,.16]),.05],[sdE([.14,.6,-.36],[.11,.16,.15]),.05],[sdE([-.14,.6,-.36],[.11,.16,.15]),.05],
+      [sdE([0,.73,.43],[.15,.15,.15],[-.6,0,0]),.08],[sdE([0,.48,.33],[.13,.12,.12]),.08]]),[0,.6,-.02],1);
+    part(m,[morph(TS,52,38,[1,1,1.4])],W,.013);
+    {const pole=[0,-1,0];part(m,[bandG(TS(.006),pole,()=>.02,ph=>.72+.12*cos(ph)**2,56,4)],WD,.008)}
+    // armour plates with grey rims on the haunches
+    {const pl=[],rm=[],plate=(d,pts,e=.025)=>{const c=capP(TS(e),d,pts,40,6);pl.push(c.g);rm.push(sweep(c.rim,.009,{closed:1,n:40,rs:6,ref:[0,1,0]}).g)};
+      for(const sx of[-1,1])plate([sx,.45,-.75],[[0,.32],[-.3,.2],[-.35,-.15],[0,-.3],[.35,-.15],[.3,.2]]);
+      part(m,pl,W,.01);part(m,rm,WD,.006)}
+    // four strong armoured legs: white plates over a grey under-suit, big gold claws; front-left, front-right, back-right, back-left
+    for(const [sx,bk] of[[-1,0],[1,0],[1,1],[-1,1]]){const l=grp(m,bk?[sx*.2,.62,-.37]:[sx*.21,.62,.28]);R.legs.push(l);
+      const wh=[],gr=[],cl=[];
+      if(!bk){wh.push(sweep([[-sx*.01,.06,.01],[0,-.08,-.02],[0,-.22,-.04]],t=>.12-.04*t,{n:8,rs:16,ends:1}).g);
+        gr.push(sweep([[0,-.2,-.04],[0,-.34,-.03],[0,-.48,0],[0,-.55,.04]],t=>.076-.014*t,{n:10,rs:14}).g);
+        wh.push(ellG([0,-.38,.04],[.082,.15,.06],[.12,0,0]));
+        wh.push(ellG([0,-.56,.08],[.088,.055,.118]));
+        // a pauldron over the shoulder with a short blade standing back from it
+        wh.push(ellG([sx*.035,.035,0],[.125,.06,.155],[0,0,-sx*.45]),xf(clawG(.035,.16,.25,.45),[sx*.07,.06,-.08],[sx*.25,.45,-1],[0,1,0]));
+        for(const i of[-1,0,1])cl.push(xf(clawG(.031,.115,.55,.8),[i*.05,-.575,.17-abs(i)*.016],[i*.25,-.5,1],[0,-1,0]))}
+      else{wh.push(ellG([sx*.012,-.08,.03],[.13,.21,.18],[.3,0,0]));
+        gr.push(sweep([[0,-.2,.08],[0,-.31,.02],[0,-.42,-.09],[0,-.5,-.07],[0,-.555,-.02]],t=>.066-.012*t,{n:14,rs:14}).g);
+        wh.push(ellG([0,-.48,-.1],[.062,.085,.048],[-.3,0,0]));
+        wh.push(ellG([0,-.56,.05],[.082,.055,.108]));
+        for(const i of[-1,0,1])cl.push(xf(clawG(.028,.105,.55,.8),[i*.046,-.575,.135-abs(i)*.016],[i*.25,-.5,1],[0,-1,0]));
+        // the blade on the hind leg, standing back from the heel
+        wh.push(sweep([[0,-.4,-.1],[0,-.34,-.22],[0,-.24,-.33],[0,-.1,-.4]],t=>[.016*(1-.5*t)+.003,.07*pow(1-t,.8)*min(1,.5+t*4)+.003],{n:14,rs:10,ref:[1,0,0]}).g)}
+      part(l,wh,W,.012);part(l,gr,WK,.011);part(l,cl,G,.008)}
+    // the long armoured tail curving up, a broad sword blade at its end
+    const tw=R.tail=grp(m,[0,.66,-.5]),tp=[[0,-.02,.1],[0,-.06,-.1],[0,-.04,-.28],[0,.04,-.44],[0,.15,-.55]],tt=sweep(tp,t=>.085*(1-.55*t)+.004,{n:18,rs:14});
+    part(tw,[tt.g],W,.012);
+    {const e=tt.at(1,0),bp=[[e.x,e.y-.04,e.z+.04],[e.x,e.y+.05,e.z-.06],[e.x,e.y+.16,e.z-.16],[e.x,e.y+.28,e.z-.24]];
+      part(tw,[sweep(bp,t=>[.02*(1-.6*t)+.003,.1*min(1,.45+t*3)*pow(1-t,.7)+.003],{n:16,rs:10,ref:[1,0,0]}).g],W,.012);
+      part(tw,[0,1].map(i=>sweep(tp,t=>.087*(1-.55*t)+.006,{t0:.3+i*.25,t1:.36+i*.25,n:3,rs:14}).g),WK,.008)}
+    // the head in its horned white helmet
+    const {Sh}=beastHead(m,{at:[0,.84,.5],nu:50,nv:38,hu:64,hv:18,skin:SK,helm:W,rim:WD,ym:-.005,hz:.04,rz:.2,c:[0,.06,.16],asp:[1,.9,1.5],hl:.012,
+      top:[[sdE([0,.08,.06],[.135,.12,.15]),0],[sdE([0,.1,.22],[.11,.08,.17]),.05],[taper(sdE([0,.025,.33],[.095,.064,.21]),.2,.54,.5),.07],
+        [sdE([.085,.02,.1],[.075,.075,.1]),.04],[sdE([-.085,.02,.1],[.075,.075,.1]),.04]],
+      low:[[sdE([0,-.03,.06],[.105,.08,.11]),0]],jr:[.08,.065,.21],jc:.22,ja:.42,
+      teeth:[[.42,.011,.034],[.8,.009,.026]],lteeth:[[.5,.009,.026]],
+      yb:z=>.06+.095*smo((.5-z)/.25)-.07*smo((.12-z)/.12),
+      horns:[[[0,.9,.35],[[0,-.02,.02],[0,.1,0],[0,.2,-.06],[0,.28,-.15],[0,.32,-.27]],[.032,.075]],
+        ...[-1,1].flatMap(sx=>[[[sx*.55,.7,-.45],[[0,0,0],[sx*.04,.05,-.1],[sx*.07,.08,-.22],[sx*.08,.09,-.33]],[.026,.04]],
+          [[sx*.8,.35,-.5],[[0,0,0],[sx*.04,.01,-.1],[sx*.07,0,-.21]],[.022,.032]],
+          [[sx*.85,-.25,-.3],[[0,0,0],[sx*.03,-.04,-.08],[sx*.05,-.09,-.16]],.022]])],
+      nose:[.28,.45,1,.016],
+      eye:{d:[.52,.37,.74],w:.42,h:.25,eye:PAL.eye,sw:1.12,sh:1.3}});
+    R.head.scale.setScalar(1.2);R.head.rotation.x=.1;
+    // red marks under the eyes along the cheeks
+    {const mk=[];for(const sx of[-1,1]){const E=eyeF(Sh(.016),[sx*.52,.37,.74]),Q=(x,y)=>E(sx*x,y);
+      mk.push(stripeG(Sh(.016),[Q(-.2,-.36),Q(.1,-.4),Q(.4,-.36),Q(.75,-.26),Q(1.05,-.16)],t=>.06*min(1,(1-t)*3,.3+t*4)))}
+      DM(R.head,Rd,mk)}
+    // the red scarf round the neck
+    part(m,[sweep([[0,.72,.56],[.15,.76,.46],[.17,.82,.35],[0,.89,.3],[-.17,.82,.35],[-.15,.76,.46]],[.06,.05],{closed:1,n:30,rs:12,ref:[0,1,0]}).g],Rd,.012);
+    // the huge red mane of cape strips streaming back from the neck over the body, curling up at the ends like flames
+    part(m,[sheetG(flameCape({y:.76,dy:-.02,z:.42,A:2,n:6,r0:[.16,.15],r1:[.26,.24],L:.34,Lp:.12,out:.04,lift:.03}),54,12,(u,v)=>.014*(1-.35*v))],Rd,.012);
+    part(m,fins([0,.76,.44],[[0,.13,1.05,.17,.03,.06,0,.55,0,.24,1.1],[.4,.14,1,.16,.04,.06,-.03,.55,.25,.21,.9],[-.4,.14,1,.16,.04,.06,-.03,.55,-.25,.21,-.9],
+      [.85,.16,.95,.16,.09,.06,-.05,.55,.8,.17,.4],[-.85,.16,.95,.16,.09,.06,-.05,.55,-.8,.17,-.4],[1.35,.18,.85,.15,.14,.05,-.08,.55,1.2,.12],[-1.35,.18,.85,.15,.14,.05,-.08,.55,-1.2,.12],
+      [1.8,.18,.7,.13,.12,.04,-.12,.55,1.4,.06],[-1.8,.18,.7,.13,.12,.04,-.12,.55,-1.4,.06],
+      [.2,.2,.8,.15,.03,.05,-.2,.55,.1,.17,-1],[-.2,.2,.8,.15,.03,.05,-.2,.55,-.1,.17,1],[.62,.21,.6,.13,.03,.04,-.42,.55,.3,.1,.5],[-.62,.21,.6,.13,.03,.04,-.42,.55,-.3,.1,-.5]],.05,16,.13),Rd,.012)}
+
+  /* ---------- the knights (forms 4 and 5): two legs, arms the app swings, capes ---------- */
+  const qE=(x,y,z)=>new T.Quaternion().setFromEuler(new T.Euler(x,y,z));
+  // an arm: the app's shoulder group A (at rest it is turned x -.75, z sx*.35), inside it the upper arm U turned to hang as rest [hx, hz]
+  // (undoing the app's turn), the forearm F bent forward at the elbow, the hand H; returns the groups
+  function knightArm(sx,at,o){const A=grp(m,at,[-.75,0,sx*.35]);A.userData.z=sx*.35;R.arms.push(A);
+    const U=grp(A);U.quaternion.copy(qE(-.75,0,sx*.35).invert().multiply(qE(o.hx,0,sx*o.hz)));
+    const F=grp(U,[0,-o.ua,0],[-o.bend,0,0]),H=grp(F,[0,-o.fa,0]);return {A,U,F,H}}
+  // the rest direction of a thing held in hand group H, pointing along the model's direction d
+  const hold=(H,d)=>{m.updateMatrixWorld(true);return H.getWorldQuaternion(new T.Quaternion()).invert().multiply(new T.Quaternion().setFromUnitVectors(V3(0,1,0),V3(...d).normalize()))};
+  // a blade along +y from its root: half thickness th, half width w(t) (or the default leaf), its edge drawn with a lighter stripe
+  const bladeG=(L,w,th=.012,o={})=>sweep([[0,0,0],[0,L*.35,o.cv||0],[0,L*.7,(o.cv||0)*1.4],[0,L,(o.cv||0)*1.2]],
+    t=>[th*(1-.6*t)+.002,(typeof w==='function'?w(t):w*min(1,.5+t*3)*pow(1-t,.7))+.002],{n:o.n||14,rs:o.rs||8,ref:[1,0,0]}).g;
+  // a cape hanging from the shoulders: a C-shaped thick sheet round the back, billowing back as it falls, its hem cut into points
+  const capeK=o=>(u,v)=>{const sw=o.sw0+(o.sw1-o.sw0)*v,a=(u-.5)*o.A,hm=saw(u,o.n),vv=v*(1+o.hem*pow(hm,1.3)),
+      y=o.y0-(o.y0-o.y1)*vv,z=o.z0-o.back*pow(vv,1.4)+o.fl*sin(PI*u*o.n)*vv*vv;
+    return [sin(a)*sw,y,z-cos(a)*o.d*(1+vv)]};
+
+  // a ring round the body TS at height y (lifted e), tube radius r
+  const ringAtY=(TS,y,e,r,n=40)=>{const P=[];for(let i=0;i<n;i++){const ph=i/n*TAU;P.push(TS(e)(sph(polarAtY(TS(e),[0,1,0],ph,y,.05,3),ph)).toArray())}return sweep(P,r,{closed:1,n,rs:8,ref:[0,1,0]}).g};
+  // a sword along +y from its cross guard: the blade L long, w half wide, its point the last 16%; a fuller stripe down its middle,
+  // the gold guard, a grip gl long and a gold pommel. c: [blade, fuller, grip]
+  function sword(par,L,w,gl,c){const th=.011;
+    part(par,[sweep([[0,0,0],[0,L*.5,0],[0,L,0]],t=>[th*(1-.5*t)+.002,w*min(1,(1-t)/.16)+.002],{n:16,rs:8,ref:[1,0,0]}).g],c[0],.008);
+    DM(par,c[1],[sweep([[0,.03,0],[0,L*.8,0]],t=>[th+.003,w*.3*min(1,(1-t)*6,t*12)+.001],{n:10,rs:8,ref:[1,0,0]}).g]);
+    part(par,[sweep([[0,.014,-w*2.3],[0,0,0],[0,.014,w*2.3]],t=>.013*(1-.5*abs(2*t-1))+.005,{n:12,rs:8,ref:[0,1,0]}).g,ellG([0,-gl-.014,0],[.021,.021,.021])],PAL.gold,.007);
+    part(par,[sweep([[0,0,0],[0,-gl,0]],.015,{n:4,rs:10}).g],c[2],.007)}
+
+  /* ---------- 4. SaviorHackmon ---------- */
+  function ultimate(){const W=PAL.wh,WD=PAL.whD,WK=PAL.whK,Rd=PAL.cape,RdD=PAL.capeD,G=PAL.gold,GD=PAL.goldD,BL=PAL.blade,SK=mix(PAL.wh,PAL.whD,.4),SH=mix(PAL.wh,PAL.whD,.6);
+    R.h=1.5;R.sc=.4;R.w=1;R.d=1.1;
+    // the slim armoured body: a broad chest, a narrow grey waist, the hips
+    const TS=radial(uni([[sdE([0,1.05,0],[.19,.15,.125]),0],[sdE([0,1.1,.035],[.165,.09,.095]),.05],[sdE([0,.92,-.005],[.12,.11,.088]),.08],
+      [sdE([0,.8,-.01],[.145,.085,.1]),.07],[sdE([.165,1.12,0],[.075,.07,.08]),.05],[sdE([-.165,1.12,0],[.075,.07,.08]),.05]]),[0,.98,0],1);
+    part(m,[morph(TS,48,40)],W,.012);
+    {const pole=[0,1,0],A=ph=>polarAtY(TS(.008),pole,ph,.97,.05,3),B=ph=>polarAtY(TS(.008),pole,ph,.87,.05,3);part(m,[bandG(TS(.008),pole,A,B,48,3)],WK,.008)}
+    // the gold belt, the red gem in the middle of the chest in a gold setting, gold trim under the chest plate
+    const ringAt=(y,e,r,n)=>ringAtY(TS,y,e,r,n);
+    const gp=onTo(TS,.0,0,1.15,.25),gn=dirTo(TS,0,1.15,.25);
+    part(m,[ringAt(.845,.05,.022),ringAt(.985,.03,.012),xf(new T.TorusGeometry(.042,.011,6,20),[gp.x,gp.y,gp.z],[gn.x,gn.y,gn.z])],G,.008);
+    part(m,[ellG([0,0,0],[.034,.042,.022]).applyMatrix4(basis([gp.x,gp.y,gp.z+.008],[0,1,0],[0,0,1]))],PAL.gem,.008);
+    // the red scarf round the neck and its V over the chest
+    part(m,[sweep([[0,1.17,.11],[.1,1.19,.07],[.12,1.22,-.02],[0,1.24,-.07],[-.12,1.22,-.02],[-.1,1.19,.07]],[.035,.03],{closed:1,n:30,rs:10,ref:[0,1,0]}).g,
+      ...[-1,1].map(sx=>stripeG(TS(.03),[[sx*.75,1.25,.35],[sx*.45,.95,1],[sx*.04,.55,1]],t=>.2*(1-.75*t)+.02,16,5))],Rd,.01);
+    // the neck
+    part(m,[sweep([[0,1.12,-.01],[0,1.2,0],[0,1.3,.03]],.055,{n:8,rs:14}).g],SK,.01);
+    // legs: white thighs, gold-rimmed knee guards, long white blade shins tapering to points (it stands on them): [left, right]
+    for(const sx of[-1,1]){const L=grp(m,[sx*.1,.78,0],[0,0,sx*.03]);R.legs.push(L);
+      part(L,[sweep([[0,.03,0],[0,-.15,.04],[0,-.33,.07]],t=>.07-.018*t,{n:10,rs:16,ends:1}).g,ellG([0,-.34,.105],[.06,.065,.035])],W,.011);
+      part(L,[sweep([[0,-.33,.07],[0,-.5,.03],[0,-.66,-.02],[0,-.775,-.03]],t=>[(.056-.01*t)*pow(1-t,.55)+.003,(.07)*pow(1-t,.6)*(1+.3*sin(PI*t))+.003],{n:16,rs:14,ref:[1,0,0]}).g],SH,.011);
+      part(L,[ringG(.058,.01,[0,-.335,.075],[0,1,.25])],G,.006);
+      DM(L,WK,[decalG([0,.0,1],k.ell(0,0,.45,.45,0,4),ellF([0,-.34,.105],[.06,.065,.035],.02))],'')}
+    // arms: white upper arms under big round gold-rimmed pauldrons, white gauntlets with gold cuffs, hands of gold claws, and a crimson
+    // blade along each forearm reaching back past the elbow
+    for(const sx of[-1,1]){const {U,F,H}=knightArm(sx,[sx*.2,1.12,0],{hx:-.15,hz:.12,ua:.23,fa:.21,bend:.45});
+      part(U,[sweep([[0,.02,0],[0,-.1,0],[0,-.23,0]],t=>.05-.006*t,{n:8,rs:14,ends:1}).g,ellG([sx*.025,.03,0],[.1,.075,.105],[0,0,-sx*.35])],W,.011);
+      part(U,[ringG(.098,.012,[sx*.03,0,0],[sx*.35,1,0],6,24)],G,.007);
+      part(F,[sweep([[0,.01,0],[0,-.1,.005],[0,-.2,.01]],t=>.044+.012*t,{n:8,rs:14,ends:1}).g],W,.011);
+      part(F,[ringG(.058,.011,[0,-.19,.01],[0,1,0])],G,.006);
+      part(F,[xf(bladeG(.42,.055,.011,{cv:.025}),[sx*.045,-.17,-.015],[sx*.4,1,-.25],[sx*.8,-.3,-.5])],BL,.009);
+      part(H,[ellG([0,-.03,.012],[.042,.038,.048])],W,.01);
+      part(H,[-1,0,1].map(i=>xf(clawG(.021,.115,.55,.8),[i*.027,-.045,.03],[i*.18,-1,.5],[0,0,1])),G,.007)}
+    // the tail coming down from the hips under the cape, its crimson blade pointing back to the ground
+    const tw=R.tail=grp(m,[0,.82,-.06]),tp=[[0,0,0],[0,-.1,-.07],[0,-.3,-.15],[0,-.5,-.2]],tt=sweep(tp,t=>.06*(1-.45*t)+.004,{n:14,rs:12});
+    part(tw,[tt.g],W,.011);
+    {const e=tt.at(1,0);part(tw,[xf(bladeG(.34,.07,.012,{cv:.03}),[e.x,e.y+.01,e.z-.01],[0,-.75,-.66],[0,-.66,.75])],BL,.009)}
+    // the head: a dragon's head in the horned white helmet with gold goggles on its brow
+    const {Sh}=beastHead(m,{at:[0,1.31,.04],nu:44,nv:34,hu:56,hv:16,skin:SK,helm:W,rim:WD,ym:-.005,hz:.04,rz:.2,c:[0,.06,.16],asp:[1,.9,1.5],hl:.012,
+      top:[[sdE([0,.08,.06],[.13,.12,.15]),0],[sdE([0,.1,.22],[.105,.08,.17]),.05],[taper(sdE([0,.025,.33],[.09,.064,.2]),.2,.53,.5),.07],
+        [sdE([.08,.02,.1],[.072,.075,.1]),.04],[sdE([-.08,.02,.1],[.072,.075,.1]),.04]],
+      low:[[sdE([0,-.03,.06],[.1,.08,.11]),0]],jr:[.076,.062,.2],jc:.21,ja:.42,
+      teeth:[[.42,.011,.034],[.8,.009,.026]],lteeth:[[.5,.009,.026]],
+      yb:z=>.06+.095*smo((.5-z)/.25)-.07*smo((.12-z)/.12),
+      horns:[[[0,.9,.3],[[0,-.02,.02],[0,.1,0],[0,.2,-.06],[0,.27,-.15],[0,.3,-.26]],[.03,.07]],
+        ...[-1,1].flatMap(sx=>[[[sx*.75,.45,-.35],[[0,0,0],[sx*.07,.03,-.06],[sx*.14,.06,-.13]],[.022,.034]],
+          [[sx*.7,.62,-.55],[[0,0,0],[sx*.04,.06,-.1],[sx*.07,.1,-.2]],[.022,.032]],
+          [[sx*.85,-.25,-.3],[[0,0,0],[sx*.03,-.04,-.08],[sx*.05,-.09,-.15]],.02]])],
+      nose:[.28,.45,1,.016],
+      eye:{d:[.48,.35,.8],w:.43,h:.26,eye:PAL.eye,sw:1.12,sh:1.3}});
+    R.head.scale.setScalar(.9);R.head.rotation.x=.08;
+    {const mk=[],gb=[],ln=[];for(const sx of[-1,1]){const E=eyeF(Sh(.016),[sx*.48,.35,.8]),Q=(x,y)=>E(sx*x,y);
+        mk.push(stripeG(Sh(.016),[Q(-.2,-.36),Q(.1,-.4),Q(.4,-.36),Q(.75,-.26),Q(1.05,-.16)],t=>.05*min(1,(1-t)*3,.3+t*4)));
+        // the goggles: a gold band over the brow, a dark lens above each eye
+        const ld=[sx*sin(.45)*.8,1.15,cos(.45)*.7],L0=Sh(.045)(V3(...ld).normalize()),nd=V3(...ld).normalize();ln.push(xf(ellG([0,0,0],[.034,.03,.016]),[L0.x,L0.y,L0.z],[0,1,0],nd.toArray()));
+        gb.push(xf(new T.TorusGeometry(.036,.009,6,18),[L0.x,L0.y,L0.z],nd.toArray()))}
+      const band=[];for(let i=0;i<=16;i++){const a=-1.25+i/16*2.5;band.push(Sh(.03)(V3(sin(a)*.8,1.15,cos(a)*.7).normalize()).toArray())}
+      gb.push(sweep(band,t=>[.026*min(1,(1-abs(2*t-1))*6)+.003,.012],{n:32,rs:8,ref:[0,1,0]}).g);
+      DM(R.head,Rd,mk);part(R.head,gb,G,.007);part(R.head,ln,PAL.capeL,.006)}
+    // the long red cape from the shoulders, billowing back, its hem cut into points
+    part(m,[sheetG(capeK({y0:1.2,y1:.36,z0:-.06,back:.3,sw0:.21,sw1:.5,A:2.9,d:.09,n:6,hem:.22,fl:.04}),48,18,.012)],Rd,.011)}
+
+  /* ---------- 5. Jesmon ---------- */
+  function mega(){const W=PAL.wh,WD=PAL.whD,WK=PAL.whK,Rd=PAL.cape,G=PAL.gold,BL=PAL.blade,SK=mix(PAL.wh,PAL.whD,.4),SH=mix(PAL.wh,PAL.whD,.6);
+    R.h=1.62;R.sc=.43;R.w=1.2;R.d=1.15;
+    // the armoured body: a broad chest plate, a narrow grey waist, the hips
+    const TS=radial(uni([[sdE([0,1.12,0],[.215,.165,.135]),0],[sdE([0,1.17,.04],[.185,.1,.1]),.05],[sdE([0,.99,-.005],[.13,.11,.095]),.08],
+      [sdE([0,.86,-.01],[.16,.09,.108]),.07],[sdE([.19,1.2,0],[.08,.075,.085]),.05],[sdE([-.19,1.2,0],[.08,.075,.085]),.05]]),[0,1.05,0],1);
+    part(m,[morph(TS,48,40)],W,.012);
+    {const pole=[0,1,0],A=ph=>polarAtY(TS(.008),pole,ph,1.03,.05,3),B=ph=>polarAtY(TS(.008),pole,ph,.93,.05,3);part(m,[bandG(TS(.008),pole,A,B,48,3)],WK,.008)}
+    // gold: the belt, the trim under the chest plate
+    part(m,[ringAtY(TS,.905,.05,.024),ringAtY(TS,1.045,.03,.013)],G,.008);
+    // the red scarf round the neck and the big red V over the chest, edged in gold
+    part(m,[sweep([[0,1.25,.12],[.11,1.27,.08],[.13,1.3,-.02],[0,1.32,-.08],[-.13,1.3,-.02],[-.11,1.27,.08]],[.038,.032],{closed:1,n:30,rs:10,ref:[0,1,0]}).g,
+      ...[-1,1].map(sx=>stripeG(TS(.03),[[sx*.8,1.3,.35],[sx*.5,.85,1],[sx*.03,.3,1]],t=>.26*(1-.7*t)+.02,16,6))],Rd,.01);
+    // a red flap hanging from the front of the belt
+    part(m,[sheetG((u,v)=>[(u-.5)*.07*(1-.25*v),.89-v*(.15+.04*saw(u,2)),.112+.01*v],6,6,.006)],Rd,.008);
+    // the neck
+    part(m,[sweep([[0,1.2,-.01],[0,1.3,0],[0,1.42,.03]],.06,{n:8,rs:14}).g],SK,.01);
+    // legs: armoured white thighs, gold-rimmed knee guards, long silver blade shins tapering to points
+    for(const sx of[-1,1]){const L=grp(m,[sx*.115,.84,0],[0,0,sx*.03]);R.legs.push(L);
+      part(L,[sweep([[0,.03,0],[0,-.16,.04],[0,-.35,.07]],t=>.078-.018*t,{n:10,rs:16,ends:1}).g,ellG([sx*.014,-.14,.035],[.074,.12,.068]),ellG([0,-.36,.112],[.066,.072,.04])],W,.011);
+      part(L,[sweep([[0,-.35,.07],[0,-.53,.03],[0,-.7,-.02],[0,-.835,-.03]],t=>[(.062-.012*t)*pow(1-t,.55)+.003,.078*pow(1-t,.6)*(1+.3*sin(PI*t))+.003],{n:16,rs:14,ref:[1,0,0]}).g],SH,.011);
+      part(L,[ringG(.064,.011,[0,-.355,.077],[0,1,.25])],G,.006);
+      DM(L,WK,[decalG([0,0,1],k.ell(0,0,.45,.45,0,4),ellF([0,-.36,.112],[.066,.072,.04],.02))],'')}
+    // arms: big round gold-rimmed pauldrons, white gauntlets with gold cuffs; the right hand holds the long red sword, the left forearm
+    // carries a long white blade pointing down past the hand
+    for(const sx of[-1,1]){const {U,F,H}=knightArm(sx,[sx*.225,1.2,0],{hx:-.14,hz:.16,ua:.25,fa:.23,bend:.42});
+      part(U,[sweep([[0,.02,0],[0,-.11,0],[0,-.25,0]],t=>.056-.006*t,{n:8,rs:14,ends:1}).g,ellG([sx*.035,.035,0],[.137,.1,.135],[0,0,-sx*.3])],W,.011);
+      part(U,[ringG(.134,.015,[sx*.04,0,0],[sx*.3,1,0],6,28),ringG(.075,.011,[sx*.085,.095,0],[sx*.3,1,0],6,20)],G,.007);
+      part(F,[sweep([[0,.01,0],[0,-.11,.005],[0,-.22,.01]],t=>.05+.014*t,{n:8,rs:14,ends:1}).g],W,.011);
+      part(F,[ringG(.066,.012,[0,-.21,.01],[0,1,0])],G,.006);
+      if(sx>0){const B=grp(F,[sx*.06,-.06,0]);B.quaternion.copy(new T.Quaternion().setFromUnitVectors(V3(0,1,0),V3(sx*.22,-1,.08).normalize()).multiply(qE(0,PI/2,0)));
+        part(B,[bladeG(.5,.05,.011)],W,.009);DM(B,G,[sweep([[0,.03,0],[0,.4,0]],t=>[.0135,.016*min(1,(1-t)*5,t*10)+.001],{n:8,rs:8,ref:[1,0,0]}).g])}
+      part(H,[ellG([0,-.04,.012],[.05,.046,.054])],W,.01);
+      if(sx>0)part(H,[-1,0,1].map(i=>xf(clawG(.02,.105,.55,.8),[i*.03,-.05,.035],[i*.15,-1,.5],[0,0,1])),G,.007);
+      else{part(H,[-1,0,1].map(i=>xf(clawG(.017,.06,.9,.8),[i*.026,-.06,.045],[0,-.5,1],[0,-1,0])),G,.007);
+        const S=grp(H,[0,-.04,.015]);S.quaternion.copy(hold(H,[-.3,-1,.28]).multiply(qE(0,.7,0)));sword(grp(S,[0,.055,0]),.6,.042,.11,[BL,PAL.capeL,W])}}
+    // the tail coming down from the hips under the cape, a white sword at its end pointing back to the ground
+    const tw=R.tail=grp(m,[0,.88,-.07]),tt=sweep([[0,0,0],[0,-.1,-.08],[0,-.32,-.16],[0,-.52,-.21]],t=>.064*(1-.45*t)+.004,{n:14,rs:12});
+    part(tw,[tt.g],W,.011);
+    {const e=tt.fr(1)[0],S=grp(tw,[e.x,e.y,e.z]);S.quaternion.copy(new T.Quaternion().setFromUnitVectors(V3(0,1,0),V3(0,-.8,-.6).normalize()).multiply(qE(0,PI/2,0)));
+      sword(S,.34,.036,.04,[W,WD,G])}
+    // the head: a dragon's head in a white helmet trimmed with gold, swept-back horns and the gold V crest with a red gem
+    const {Sh}=beastHead(m,{at:[0,1.42,.05],nu:46,nv:34,hu:56,hv:16,skin:SK,helm:W,rim:G,rimW:.012,ym:-.005,hz:.04,rz:.2,c:[0,.06,.16],asp:[1,.9,1.5],hl:.012,
+      top:[[sdE([0,.08,.06],[.13,.12,.15]),0],[sdE([0,.1,.22],[.105,.08,.17]),.05],[taper(sdE([0,.025,.33],[.09,.064,.2]),.2,.53,.5),.07],
+        [sdE([.08,.02,.1],[.072,.075,.1]),.04],[sdE([-.08,.02,.1],[.072,.075,.1]),.04]],
+      low:[[sdE([0,-.03,.06],[.1,.08,.11]),0]],jr:[.076,.062,.2],jc:.21,ja:.42,
+      teeth:[[.42,.011,.034],[.8,.009,.026]],lteeth:[[.5,.009,.026]],
+      yb:z=>.06+.095*smo((.5-z)/.25)-.07*smo((.12-z)/.12),
+      horns:[...[-1,1].flatMap(sx=>[[[sx*.17,.88,.46],[[0,-.02,.02],[sx*.055,.065,-.03],[sx*.12,.13,-.1],[sx*.18,.18,-.2]],[.013,.04],G,[0,0,1],.7],
+          [[sx*.55,.7,-.2],[[0,0,0],[sx*.06,.05,-.1],[sx*.1,.09,-.22],[sx*.12,.12,-.36]],[.024,.05]],
+          [[sx*.8,.4,-.35],[[0,0,0],[sx*.07,.03,-.06],[sx*.14,.05,-.14]],[.02,.032]],
+          [[sx*.85,-.25,-.3],[[0,0,0],[sx*.03,-.04,-.08],[sx*.05,-.09,-.15]],.02]])],
+      nose:[.28,.45,1,.016],
+      eye:{d:[.48,.35,.8],w:.43,h:.25,eye:PAL.eye,sw:1.12,sh:1.3}});
+    R.head.scale.setScalar(1);R.head.rotation.x=.06;
+    {const gd=V3(0,.9,.45).normalize(),g0=Sh(.02)(gd);part(R.head,[xf(new T.TorusGeometry(.03,.009,6,18),[g0.x,g0.y,g0.z],gd.toArray())],G,.006);
+      part(R.head,[xf(ellG([0,0,0],[.026,.03,.014]),[g0.x,g0.y,g0.z],[0,1,0],gd.toArray())],PAL.gem,.006)}
+    // the long red cape from the shoulders, billowing back, its hem cut into points
+    part(m,[sheetG(capeK({y0:1.28,y1:.36,z0:-.07,back:.32,sw0:.24,sw1:.6,A:2.9,d:.1,n:7,hem:.2,fl:.04}),48,18,.013)],Rd,.011)}
+  [null,baby,rookie,champion,ultimate,mega][f]();
+};
 const $=s=>document.querySelector(s);
 const W=128,H=128,GROUND=94,SAVE='angel-digivice-v1';
 
@@ -7605,6 +8794,8 @@ function bakeFoods(){
     P([[10.8,4.4],[12.6,2.4],[12.6,6.6]],'#ff6a3a');h.px(2.2,3,'#ffffff',1);h.px(2.6,3.4,OUT,1)});
   FOODS.bread=build(14,10,1,{ax:7,fy:9.6},h=>{const {E,ln}=h;E(7,6,6.2,3.6,'#9a5a1e');E(7,5.6,5.8,3.2,'#d08a3e');E(6.6,4.8,4.6,2,'#e8b064');
     ln([[4.4,4],[5.4,6.4]],'#9a5a1e');ln([[7,3.6],[8,6]],'#9a5a1e');ln([[9.6,4],[10.4,6.2]],'#9a5a1e')});
+  FOODS.pizza=build(13,12,1,{ax:6.5,fy:11.4},h=>{const {E,P}=h;P([[.6,2],[12.4,2],[6.5,11.6]],'#d08a3e');P([[1.6,3],[11.4,3],[6.5,10.4]],'#ffd75a');
+    E(6.5,2,6,1.6,'#9a5a1e');E(6.5,1.7,5.6,1.1,'#e8a04a');E(4.2,4.6,1.3,1.1,'#c62f28');E(8.6,4.8,1.3,1.1,'#c62f28');E(6.4,7.4,1.1,1,'#c62f28');h.px(3.6,4.1,'#ff8a7a',1)});
   FOODS.fish=build(14,9,1,{ax:7,fy:8.6},h=>{const {E,P,px}=h;P([[10.6,4.4],[13.6,1.2],[13,4.4],[13.6,7.6]],'#3f7fb8');E(6.4,4.4,5.2,3,'#3f7fb8');E(6.2,4.2,4.8,2.6,'#8cc4ec');
     E(6,5.6,3.6,1,'#dff1ff');P([[5,1.6],[8,.6],[8.6,2.2]],'#3f7fb8');px(3,3.4,OUT,1);px(2.6,3,'#ffffff',1)});
 }
@@ -7632,7 +8823,7 @@ const DIG={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3'
   '6':'111100111101111','7':'111001010010010','8':'111101111101111','9':'111101111001111','-':'000000111000000','+':'000010111010000','!':'010010010000010'};
 
 /* ---------- state: stage = the rank earned with treats and care (never goes down), form = the form on screen right now (any form, on command) ---------- */
-const fresh=()=>({v:1,line:'agumon',stage:0,form:0,name:'',owner:'',model:'',food:80,joy:80,health:100,energy:100,stars:0,wins:0,losses:0,treats:[],asleep:false,fainted:false,born:0,last:Date.now(),taps:0,sound:true,voice:true,bd:'grid',place:'auto',smart:true,mem:{fav:{},likes:[],nope:[],notes:[]},friends:[],party:{}});
+const fresh=()=>({v:1,line:'agumon',stage:0,form:0,name:'',owner:'',model:'',food:80,joy:80,health:100,energy:100,stars:0,wins:0,losses:0,raceLv:1,raceWins:0,treats:[],asleep:false,fainted:false,born:0,last:Date.now(),taps:0,sound:true,voice:true,bd:'grid',place:'auto',smart:true,mem:{fav:{},likes:[],nope:[],notes:[]},friends:[],party:{}});
 function load(){try{const r=JSON.parse(localStorage.getItem(SAVE));if(r&&r.v===1){if(r.form==null)r.form=r.stage;
   /* saves from before every Digivice had its own partner: a hatched partner was always an Agumon, so it moves to the orange Courage Digivice */
   if(!LINES[r.line]){if(r.stage>0){r.line='agumon';r.model='d3'}else r.line=lineOfModel(r.model)||'agumon'}
@@ -7668,7 +8859,7 @@ function catchUp(){const away=Date.now()-S.last;if(away>3e5&&S.form>base())S.for
   let mins=Math.min(away/6e4,60*24*7);while(mins>0){const st=Math.min(10,mins);simulate(st,true);mins-=st}}
 
 /* each Digivice keeps its own partner: switching Digivices puts this partner away (it waits in S.party) and brings that one out */
-const PARTNER_KEYS=['stage','form','name','food','joy','health','energy','stars','wins','losses','treats','asleep','fainted','born','last','taps'];
+const PARTNER_KEYS=['stage','form','name','food','joy','health','energy','stars','wins','losses','raceLv','raceWins','treats','asleep','fainted','born','last','taps'];
 function useLine(id){LINE=LINES[id]||LINES.agumon;FORMS=LINE.forms;ATTACK_RE=LINE.atk;
   ({SPR,SPF,SIL,SILF,SPB,SPBF,SILB,SILBF,SPT,PROJ,EGG}=spritesOf(LINE.id));FOOD=FOODS[LINE.meal]||FOODS.meat}
 function switchLine(id){
@@ -8168,6 +9359,282 @@ function endDuel(res){
   else say(`Lost the link to ${who}.`,3200);
   clampAll();save();updUI();linkDuelEnd();
 }
+/* ---------- race missions: your partner races a partner from another Digivice over the hills, like the racing games on the old phones.
+   Tap the screen (or A or B) to jump, and tap again in the air to jump higher. A spinning jump pops the little Digimon on the way (they
+   just pop into sparkles), and there are rings, springs, speed pads and a loop. Bumping into a rock drops some rings and slows you down,
+   but there is no game over. Win a mission and the next one is a little longer, against a new rival ---------- */
+const BUSY={battle:'Finish the battle first!',play:'Tap BYE to end the play date first.',race:'Finish the race first! (C stops it)'};
+const WHY_RACE={tired:"I'm too tired to race...",weak:"I don't feel good enough to race...",hungry:"I'm too hungry to race!"};
+const RX=30,VTOP=105,GRAV=560,JUMP=185,JUMP2=140,SPRING=232,BOOST=150,LOOP_R=26,LOOP_T=.9;
+/* big letters for the countdown and the finish */
+const RDIG={...DIG,S:DIG['5'],T:'111010010010010',N:'111101101101101',D:'110101101101110',G:'111100101101111',O:DIG['0']};
+let race=null,RART=null;
+
+/* ---------- the pieces of the course, drawn once ---------- */
+function rcv(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');fn(x,(X,Y,col,w2=1,h2=1)=>{x.fillStyle=col;x.fillRect(X,Y,w2,h2)});return c}
+function olc(c){const o=document.createElement('canvas');o.width=c.width+2;o.height=c.height+2;const x=o.getContext('2d'),sh=sil(c,OUT);
+  for(const [dx,dy] of [[0,1],[2,1],[1,0],[1,2]])x.drawImage(sh,dx,dy);x.drawImage(c,1,1);return o}
+const starPts=(cx,cy,r1,r2)=>Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?r2:r1;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]});
+function raceArt(){
+  if(RART)return RART;const A=RART={};
+  /* a gold ring that spins: round, then thinner and thinner */
+  A.ring=[1,.6,.22,.6].map(k=>olc(rcv(7,7,(x,p)=>{for(let y=0;y<7;y++)for(let i=0;i<7;i++){const dx=(i+.5-3.5)/k,dy=y+.5-3.5,d=Math.hypot(dx,dy);
+    if(d<=3.5&&(k<.3||d>=1.9))p(i,y,dx+dy<-2?'#fff6c0':dx+dy<1.2?'#ffd23a':'#d0901a')}})));
+  A.rock=build(12,9,1,{ax:6,fy:8.8},h=>{const {E,P}=h;E(6,5.4,5.6,3.8,'#6a6488');E(5.6,5,5,3.3,'#9a94b8');E(4,3.4,2,1.2,'#cbc7e0');E(8.6,6.6,1.6,1,'#7d7799');
+    P([[.6,7.6],[11.4,7.6],[11.4,8.8],[.6,8.8]],'#6a6488')});
+  const spring=up=>build(10,9,1,{ax:5,fy:8.8},h=>{const {P,hl}=h,t=up?0:3.4;
+    P([[1,7],[9,7],[9,8.8],[1,8.8]],'#c62f28');for(let y=t+2.4;y<7;y+=1.6)hl(2.6,7.4,y,'#9aa6b2');P([[.2,t],[9.8,t],[9.8,t+1.8],[.2,t+1.8]],'#ffd23a')});
+  A.spring=[spring(0),spring(1)];
+  /* a speed pad in the ground: arrows that flash */
+  A.pad=[0,1].map(on=>rcv(15,5,(x,p)=>{p(0,0,'#3a3046',15,5);const c=on?'#fff27a':'#ff9a1f';
+    for(let i=0;i<3;i++)for(const [dx,dy] of [[0,0],[1,1],[2,2],[1,3],[0,4]])p(2+i*4+dx,dy,c,2,1)}));
+  A.bug=pebble(.42);A.bat=goobat(.46);
+  A.dust=mapSpr(['.w.','www','.w.'],{w:'#fffaf0'});
+  return A;
+}
+/* the sign at the goal spins and lands on the winner's colour */
+const plate=(col,star)=>build(12,12,1,{ax:6,fy:11.8},h=>{const {E,P}=h;E(6,6,5.8,5.8,'#c8870e');E(6,6,5,5,col);
+  if(star)P(starPts(6,6.3,3.9,1.7),'#fffaf0');else{E(6,6,2.2,2.2,'#fffaf0');E(6,6,1.1,1.1,col)}});
+/* the hills, the lake and the sky, in the colours of the time of day */
+const DIRT={dawn:['#c9874a','#a3662f'],day:['#c17a3a','#97582a'],dusk:['#a8693e','#80492c'],night:['#5d4c66','#463a52']};
+function raceBg(t,p){
+  const [a,b]=t.sky.map(hex),sky=rcv(W,GROUND+1,(x,px)=>{for(let y=0;y<=GROUND;y++){const k=Math.min(1,Math.floor(y/GROUND*7)/6);px(0,y,`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',')})`,W,1)}
+    if(p==='night')for(let i=0;i<30;i++)px((i*37+11)%W,(i*53+7)%60+4,'#fffbe0');
+    const disc=(cx,cy,r,col)=>{for(let yy=-r;yy<=r;yy++){const w=Math.floor(Math.sqrt(r*r-yy*yy));px(cx-w,cy+yy,col,w*2+1,1)}};
+    if(p==='night'){disc(96,44,6,t.sun);disc(99,42,5,`rgb(${a.join(',')})`)}else disc(p==='dusk'?92:98,p==='dusk'?60:46,p==='day'?7:9,t.sun)});
+  /* far away: mountains, and a lake in front of them */
+  const far=rcv(256,48,(x,px)=>{const tri=(cx,base,h,w,col)=>{for(let yy=0;yy<=h;yy++){const hw=Math.round(w*Math.min(1,(yy+2)/h)/2);px(cx-hw,base-h+yy,col,hw*2+1,1)}};
+    [[30,38,30,56,1],[84,38,22,44,0],[132,38,34,62,1],[190,38,24,48,0],[236,38,30,52,1]].forEach(([cx,base,h,w,c])=>{tri(cx,base,h,w,t.mtn[c]);tri(cx-256,base,h,w,t.mtn[c]);tri(cx+256,base,h,w,t.mtn[c]);
+      if(h>=28)tri(cx,base-h+8,8,Math.round(w*8/h),t.snow)});
+    px(0,36,t.sea,256,12);for(let i=0;i<24;i++)px((i*43+9)%250,38+(i*7)%9,t.cloud,4+(i%3)*2,1)});
+  /* closer: round green hills with palm trees and flowers */
+  const mid=rcv(192,40,(x,px)=>{const hill=(cx,r,col,top)=>{for(let yy=0;yy<r;yy++){const dy=r-yy,w=Math.floor(Math.sqrt(r*r-dy*dy));for(const o of [-192,0,192])px(cx+o-w,40-r+yy,yy<2?top:col,w*2+1,1)}};
+    hill(30,18,t.hill[1],t.hill[0]);hill(96,24,t.hill[0],t.grass);hill(160,16,t.hill[1],t.hill[0]);
+    const palm=(px0,h)=>{for(let k=0;k<h;k++)px(Math.round(px0+Math.sin(k/h*1.3)*3),40-k,k%3?'#8a5a3a':'#6b4428',2,1);const tx=Math.round(px0+Math.sin(1.3)*3),ty=40-h;
+      [[-9,3],[-7,-2],[7,-3],[9,3],[0,-6]].forEach(([dx,dy],i)=>{for(let k=0;k<=8;k++)px(Math.round(tx+dx*k/8),Math.round(ty+dy*k/8+(k>5?k-5:0)),t.pine[i%2],2,1)})};
+    palm(58,22);palm(126,28);palm(178,18);
+    for(const fx of [14,80,110,146]){px(fx,32,'#3e9660',1,8);px(fx-1,30,'#ffd23a',3,3);px(fx,31,'#c8870e')}});
+  return {sky,far,mid,dirt:DIRT[p]||DIRT.day};
+}
+/* the loop: a ring of track you run all the way round */
+function loopArt(t,dirt){
+  const R=LOOP_R,T=5,S=(R+T)*2+2,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),m=S/2;
+  for(let y=0;y<S;y++)for(let i=0;i<S;i++){const dx=i+.5-m,dy=y+.5-m,d=Math.hypot(dx,dy);if(d<R||d>=R+T)continue;
+    const seg=(Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/10))+(d>=R+T/2?1:0))%2;
+    x.fillStyle=d<R+1.3?t.grass:d>=R+T-1?OUT:dirt[seg];x.fillRect(i,y,1,1)}
+  return c;
+}
+
+/* ---------- the course: rings, rocks, little Digimon, springs, speed pads and a loop, a bit harder each mission ---------- */
+function raceCourse(lv){
+  const d=Math.min(lv-1,6),LEN=2600+d*300,O=[],L=Math.round(LEN*.55);
+  const add=(k,x,o)=>O.push(Object.assign({k,x:Math.round(x)},o||{}));
+  const rings=(x0,hs,dx=12)=>hs.forEach((h,i)=>add('ring',x0+i*dx,{h}));
+  add('loop',L);for(const a of [.25,.5,.75]){const q=LOOP_R-9,an=a*2*Math.PI;add('ring',L+q*Math.sin(an),{h:LOOP_R-q*Math.cos(an)})}
+  rings(L-96,[6,6,6,6,6]);rings(L+60,[6,6,6,6]);
+  const WT={row:3,arc:2,rock:3+d*.4,bug:2+d*.4,bat:lv>1?1.5:0,spring:1.2,pad:1,rocks:lv>2?d*.5:0,combo:lv>3?d*.4:0},keys=Object.keys(WT);
+  const pickK=()=>{let s=0;for(const k of keys)s+=WT[k];let q=Math.random()*s;for(const k of keys){q-=WT[k];if(q<=0)return k}return 'row'};
+  let x=240,last='';
+  while(x<LEN-220){
+    if(x>L-180&&x<L+120){x=L+120;continue}
+    let k=pickK();if(k===last&&k!=='row')k='row';last=k;let w=60;
+    switch(k){
+      case'row':rings(x,[6,6,6,6,6]);break;
+      case'arc':rings(x,[10,20,25,20,10]);break;
+      case'rock':add('rock',x+30);rings(x+6,[14,24,28,24,14]);break;
+      case'bug':add('bug',x+40);rings(x+62,[6,6,6]);w=92;break;
+      case'bat':add('bat',x+40,{h:34});rings(x+16,[6,6,6,6,6]);w=70;break;
+      case'spring':{add('spring',x+14);const hs=[];for(let i=1;i<=6;i++){const tt=i*.13;hs.push(Math.round(SPRING*tt-GRAV/2*tt*tt))}rings(x+14+.13*VTOP,hs,.13*VTOP);w=124;break}
+      case'pad':add('pad',x+10);rings(x+46,[6,6,6,6,6,6],16);w=150;break;
+      case'rocks':add('rock',x+30);add('rock',x+112);rings(x+6,[14,24,28,24,14]);rings(x+88,[14,24,28,24,14]);w=142;break;
+      case'combo':add('rock',x+30);add('bat',x+30,{h:40});w=70;break;
+    }
+    x+=w+(130-d*8)+Math.random()*(90-d*6);
+  }
+  rings(LEN-150,[6,6,6,6,6],14);add('goal',LEN);
+  return {LEN,loopAt:L,objs:O.sort((a,b)=>a.x-b.x)};
+}
+
+/* ---------- starting, jumping and stopping ---------- */
+const runner=x=>({x,h:0,vh:0,v:0,air:false,jumps:0,inv:0,boost:0,loop:null,spin:0,dist:0,buf:0,done:null,stop:null});
+const raceFit=c=>Math.min(1,24/Math.max(1,c.fy-c.tp),30/c.width);
+function startRace(){
+  if(!ready())return;
+  const w=battleWhy();if(w){bad();return say(WHY_SYS[w].replace('battle','race'),3200)}
+  const lv=Math.max(1,S.raceLv|0),others=LINE_IDS.filter(id=>id!==S.line),rl=others[(lv-1)%others.length],f=Math.max(1,S.form),RS=spritesOf(rl),c=SPB[f];
+  raceArt();const C=raceCourse(lv),bg=raceBg(SCN.t,SCN.p),T=window.__digiTest;
+  race={lv,rl,f,RS,rname:LINES[rl].forms[f].name,rcol:LINES[rl].ray,...C,bg,loopC:loopArt(SCN.t,bg.dirt),mk:raceFit(c),rk2:raceFit(RS.SPB[f]),
+    hh:(c.fy-c.tp)*raceFit(c),hw:Math.max(4,Math.min(7,c.width*raceFit(c)/2-2)),plates:{q:plate('#9aa6b2'),back:plate('#ffd23a'),win:plate(LINE.ray,1),lose:plate(LINES[rl].ray,1)},
+    P:runner(0),R:runner(-28),t:0,last:performance.now(),phase:'count',cn:4,rings:0,rk:.86+Math.min(lv-1,6)*.015,cam:-RX,mt:0,mi:0,dust:0,said:{},lead:0,leadT:0,auto:!!(T&&T.auto)};
+  mode='race';anim=null;hud.el.hidden=true;topEl.hidden=true;if(panel)closePanel();if(chatOpen)closeChat();hideBubble();parts.length=0;
+  say(`Mission ${lv}: race ${race.rname} to the goal! Tap to jump.`,3400);chirp('Ready set',{n:3});updUI();
+}
+function raceJump(){
+  const r=race;if(!r||r.phase!=='run')return;const P=r.P;if(P.loop)return;
+  if(!P.air){P.air=true;P.vh=JUMP;P.jumps=1;P.spin=0;tone(440,.05,0,'square',.03);tone(700,.07,.04,'square',.03);return}
+  if(P.jumps===1){P.jumps=2;P.vh=Math.max(P.vh,0)*.3+JUMP2;tone(660,.05,0,'square',.03);tone(990,.07,.04,'square',.03);return}
+  /* a tap just before landing jumps again as soon as the feet touch down */
+  if(P.h<16&&P.vh<0)P.buf=.16;
+}
+function endRace(res){
+  const r=race;if(!r)return;race=null;mode='home';anim=null;topEl.hidden=false;pet.x=W/2;pet.dir=1;hideBubble();
+  if(res==='quit'){S.energy-=3;S.food-=1;say('Race stopped.',2400)}
+  else{S.energy-=10;S.food-=6;S.joy+=(res==='win'?15:5)+Math.min(10,Math.floor(r.rings/5));
+    if(res==='win'){S.raceWins=(S.raceWins|0)+1;if(r.lv>=(S.raceLv|0))S.raceLv=r.lv+1;startAnim('happy',1000);hearts(pet.x,40,3);say(`Mission ${r.lv} cleared! Next up: mission ${S.raceLv}.`,3600)}
+    else say(`Try mission ${r.lv} again! Jump over the rocks.`,3600)}
+  clampAll();save();updUI();
+}
+
+/* ---------- moving: both runners speed up to full speed, jump, go round the loop and stop after the goal ---------- */
+function moveRunner(r,b,dt,me){
+  if(b.stop!=null){const left=b.stop-b.x;b.v=left<.5?0:Math.min(b.v,left*3.2+4)}
+  else if(me){const tg=b.boost>0?BOOST:VTOP;b.v=b.v<tg?Math.min(tg,b.v+(b.v<50?95:70)*dt):Math.max(tg,b.v-55*dt)}
+  /* the rival keeps the race close: a little faster when it falls far behind, a little slower when it gets far ahead */
+  else{const gap=r.P.x-b.x,k=r.rk*(gap>140?1.15:gap>60?1.05:gap<-160?.8:gap<-60?.9:1);b.v+=(VTOP*k-b.v)*Math.min(1,dt*1.5)}
+  b.boost=Math.max(0,b.boost-dt);b.inv=Math.max(0,b.inv-dt);b.buf=Math.max(0,b.buf-dt);
+  if(b.loop){b.loop.t+=dt;if(b.loop.t>=LOOP_T)b.loop=null;return}
+  /* the rival (and the test autopilot) hop over rocks and the little Digimon */
+  if((!me||r.auto)&&!b.air&&b.stop==null&&r.objs.some(o=>(o.k==='rock'||o.k==='bug'&&!o.gone)&&o.x-b.x>6&&o.x-b.x<24)){b.air=true;b.vh=JUMP;b.jumps=1;b.spin=0}
+  const ox=b.x;b.x+=b.v*dt;if(b.v>1)b.dist+=b.v*dt;
+  if(b.air){b.vh-=GRAV*dt;b.h+=b.vh*dt;b.spin+=dt;if(b.h<=0){b.h=0;b.vh=0;b.air=false;b.jumps=0;b.spin=0;if(me&&b.buf>0){b.buf=0;raceJump()}}}
+  if(ox<r.loopAt&&b.x>=r.loopAt&&b.h<20&&b.stop==null){b.x=r.loopAt;b.h=0;b.vh=0;b.air=false;b.jumps=0;b.loop={t:0};
+    if(me){seq([523,659,784,1046,1318],.07);say('Wheee! Loop-de-loop!',1500)}}
+}
+/* where a runner's middle is: on the ground, in the air, or upside down in the loop */
+function bodyAt(r,b,hh){if(!b.loop)return [b.x,b.h+hh/2];const a=2*Math.PI*b.loop.t/LOOP_T,q=LOOP_R-hh/2;return [r.loopAt+q*Math.sin(a),LOOP_R-q*Math.cos(a)]}
+function raceHurt(r){
+  const P=r.P,lose=Math.min(r.rings,10,Math.max(1,Math.ceil(r.rings/2)));
+  P.v=35;P.inv=1.3;P.boost=0;P.air=true;P.vh=110;P.jumps=2;P.spin=0;tone(196,.16,0,'sawtooth',.05);
+  if(lose){r.rings-=lose;const A=RART,sx=P.x-r.cam,sy=GROUND-P.h-r.hh/2;
+    for(let i=0;i<Math.min(lose,8);i++)addP({spr:A.ring[i%4],x:sx,y:sy,vx:(i%2?1:-1)*(.02+Math.random()*.06)-.03,vy:-.06-Math.random()*.05,gy:.00022,life:900});
+    addP({text:'-'+lose,x:sx,y:sy-r.hh/2-4,vy:-.015,life:900});seq([1568,1318,1175,988],.05)}
+  if(!r.said.hurt){r.said.hurt=1;say('Ouch! Tap to jump over the rocks!',2200)}
+}
+function racePop(r,o,bounce){
+  const P=r.P;o.gone=r.t;P.vh=Math.max(P.vh,bounce);P.air=true;P.jumps=1;seq([392,523,784],.04);
+  const sx=o.x-r.cam,sy=GROUND-(o.k==='bat'?o.h:5);for(let i=0;i<4;i++)addP({spr:SPARK,x:sx+(i%2?5:-5),y:sy+(i<2?-4:4),vx:-P.v/1000,vy:-.02,life:500});
+  addP({spr:HEART,x:sx,y:sy-6,vx:-P.v/1200,vy:-.02,life:900});
+  if(!r.said.pop){r.said.pop=1;say('Pop! Spin jumps pop them!',1800)}
+}
+function raceFinish(r){
+  const P=r.P,R=r.R;P.done=r.t;r.place=R.done!=null&&R.done<=r.t?2:1;r.phase='goal';r.spinT=r.t;P.stop=r.LEN+24;P.boost=0;
+  if(R.done==null)R.stop=Math.max(R.x,r.LEN-16);
+  seq(r.place===1?[784,988,1175,1568]:[659,587,523,659],.12);
+}
+function raceStep(r,dt){
+  r.t+=dt;const P=r.P,R=r.R;
+  if(r.phase==='count'){const n=3-Math.floor(r.t);if(n!==r.cn){r.cn=n;if(n>=1)tone(523,.12)}if(r.t>=3){r.phase='run';r.t0=r.t;tone(1046,.3);say('GO!',900)}return}
+  if(r.phase==='result'){if(r.t-r.tr>=2.8)endRace(r.place===1?'win':'lose');return}
+  moveRunner(r,P,dt,true);moveRunner(r,R,dt,false);
+  if(R.done==null&&R.x>=r.LEN){R.done=r.t;if(r.phase==='run'){R.stop=r.LEN+56;say(`${r.rname} reached the goal! Keep going!`,1800)}}
+  if(r.phase==='goal'){if(P.v<=0&&r.t-r.spinT>=1.3){r.phase='result';r.tr=r.t;const s=Math.round(P.done-r.t0);
+    if(r.place===1){say(`1st place! ${r.rings} rings in ${s} seconds.`,3000);talk(pick(['We won the race!','Zoom zoom! We won!',`We're so fast, ${OWNER()}!`]),2400)}
+    else{say(`2nd place! ${r.rname} won this time.`,3000);talk(pick(['So close! Race again?',`Next time we'll win, ${OWNER()}!`]),2400)}}return}
+  /* who's ahead: a word when it changes, not too often */
+  const lead=P.x>R.x+8?1:R.x>P.x+8?-1:r.lead;
+  if(lead!==r.lead){if(r.lead&&r.t-r.leadT>5){r.leadT=r.t;say(lead>0?`You passed ${r.rname}!`:`${r.rname} is ahead! Go go go!`,1600)}r.lead=lead}
+  const hh=r.hh,hw=r.hw,[cx,cy]=bodyAt(r,P,hh);
+  for(const o of r.objs){if(o.gone||o.got||Math.abs(o.x-P.x)>70)continue;
+    if(o.k==='bug'&&o.x-r.cam<W+20)o.x-=10*dt;
+    const dx=Math.abs(o.x-P.x);
+    if(o.k==='ring'){if(Math.abs(o.x-cx)<hw+4&&Math.abs(o.h-cy)<hh/2+4){o.got=1;r.rings++;tone(1976,.04,0,'square',.025);tone(2637,.09,.04,'square',.025);
+        addP({spr:SPARK,x:o.x-r.cam,y:GROUND-o.h,vx:-P.v/1000,life:300})}continue}
+    if(P.loop)continue;
+    if(o.k==='rock'){if(dx<hw+4&&P.h<8&&P.inv<=0)raceHurt(r)}
+    else if(o.k==='bug'){if(dx<hw+6&&P.h<9){if(P.air)racePop(r,o,150);else if(P.inv<=0)raceHurt(r)}}
+    else if(o.k==='bat'){const bh=o.h+Math.sin(r.t*3+o.x)*4;if(P.air&&dx<hw+6&&Math.abs(bh-cy)<hh/2+5)racePop(r,o,120)}
+    else if(o.k==='spring'){if(dx<6&&P.h<3&&P.vh<=0){P.air=true;P.vh=SPRING;P.jumps=1;P.spin=0;o.t=r.t;seq([523,659,784,1046],.035)}}
+    else if(o.k==='pad'){if(dx<7&&P.h<2){if(P.boost<=0)seq([784,988,1318],.03);P.boost=1.6;P.v=Math.max(P.v,BOOST);o.t=r.t}}
+  }
+  if(r.phase==='run'&&P.x>=r.LEN)raceFinish(r);
+}
+
+/* ---------- drawing ---------- */
+/* the camera shows both runners at the start line, follows your partner, turns to show the whole loop while he goes round,
+   and stops at the goal so you see him run past the sign */
+function raceCam(r){const P=r.P,k=Math.max(0,1-Math.abs(P.x-r.loopAt)/90),s=k*k*(3-2*k),st=26*Math.max(0,1-P.x/120);return Math.round(Math.min(P.x-(RX+34*s+st),r.LEN-50))}
+function bigText(t,cx,y,k,col,oc){const x0=Math.round(cx-(t.length*4*k-k)/2);
+  for(const pass of [0,1]){let x=x0;g.fillStyle=pass?col:oc;for(const ch of t){const m=RDIG[ch];if(m)for(let i=0;i<15;i++)if(m[i]==='1'){const px=x+(i%3)*k,py=y+Math.floor(i/3)*k;
+    if(pass)g.fillRect(px,py,k,k);else g.fillRect(px-1,py-1,k+2,k+2)}x+=4*k}}}
+function drawRunner(r,b,c,cf,k,now,me){
+  const hh=(c.fy-c.tp)*k;let sx=b.x-r.cam,gy=GROUND-b.h,src=c;const o={sx:k,sy:k};
+  if(b.loop){const a=2*Math.PI*b.loop.t/LOOP_T;sx=r.loopAt-r.cam+LOOP_R*Math.sin(a);gy=GROUND-LOOP_R+LOOP_R*Math.cos(a);o.rot=-a;o.pivot=0}
+  else if(b.air){o.rot=Math.floor(b.spin*16)*Math.PI/2;o.pivot=Math.round(hh/2);o.joy=true}
+  else if(r.phase==='result'){src=cf;const win=me===(r.place===1);o.sx=o.sy=raceFit(cf);if(win){o.lift=Math.round(Math.abs(Math.sin((r.t-r.tr)*Math.PI*2.4))*8);o.joy=o.lift>2}else o.closed=Math.floor(now/900)%3===0}
+  else if(b.v>1){const st=Math.floor(b.dist/9)%2;o.lift=st;o.sy=k*(st?1:.94)}
+  else o.lift=Math.floor(now/450)%2;
+  if(me){r.hx=sx;r.hy=gy-hh;if(b.inv>0&&Math.floor(now/70)%2)return}
+  if(me&&b.boost>0&&!b.loop){g.fillStyle='#fffaf0';for(let i=0;i<3;i++){const y=Math.round(gy-hh*(.25+i*.25)),l=6+((i*7+Math.floor(now/40))%5)*2;g.fillRect(Math.round(sx-r.hw-4-l),y,l,1)}}
+  drawSpr(src,sx,gy,false,o);
+  if(me&&!b.air&&!b.loop&&b.v>70&&now-r.dust>110){r.dust=now;addP({spr:RART.dust,x:sx-r.hw,y:GROUND-1,vx:-.03,vy:-.008,life:260})}
+}
+function drawGoal(r,sx){
+  const x=Math.round(sx);g.fillStyle=OUT;g.fillRect(x-2,GROUND-19,4,20);g.fillStyle='#c9d2e0';g.fillRect(x-1,GROUND-19,2,20);
+  const k=r.spinT!=null?Math.min(1,(r.t-r.spinT)/1.2):0,ang=k<1?k*Math.PI*9:0;
+  const pl=k<1?(r.spinT==null?r.plates.q:Math.floor(ang/Math.PI)%2?r.plates.back:r.plates.q):r.plates[r.place===1?'win':'lose'];
+  drawSpr(pl,x,GROUND-17,false,{sx:Math.max(.15,Math.abs(Math.cos(ang)))});
+}
+function raceHud(r){
+  const plateC='rgba(197,212,160,.92)',x0=38,x1=88,y=14;
+  g.fillStyle=plateC;g.fillRect(x0-3,y-3,x1-x0+11,7);g.fillStyle=INK;g.fillRect(x0,y,x1-x0,1);
+  for(let i=0;i<4;i++)for(let j=0;j<3;j++){g.fillStyle=(i+j)%2?'#fffaf0':INK;g.fillRect(x1+2+i,y-2+j,1,1)}
+  const mark=(wx,col)=>{const px=Math.round(x0+(x1-x0)*Math.max(0,Math.min(1,wx/r.LEN)));g.fillStyle=OUT;g.fillRect(px-2,y-2,5,5);g.fillStyle=col;g.fillRect(px-1,y-1,3,3)};
+  mark(r.R.x,r.rcol);mark(r.P.x,LINE.ray);
+  const rs=String(r.rings),secs=String(Math.floor(r.phase==='count'?0:(r.P.done??r.t)-r.t0||0));
+  g.fillStyle=plateC;g.fillRect(24,20,16+rs.length*4,11);g.drawImage(RART.ring[0],26,21);drawText(rs,37+rs.length*2,23,INK);
+  g.fillStyle=plateC;g.fillRect(100-secs.length*4-6,20,secs.length*4+7,11);drawText(secs,100-secs.length*2-2,23,INK);
+}
+/* a little racing tune, like the old phone games (only with sound on) */
+const RMEL=[76,0,79,0,81,0,79,76,0,0,72,0,74,0,76,0,77,0,76,0,74,0,72,0,74,0,0,0,0,0,0,0,76,0,79,0,81,0,84,0,83,0,81,0,79,0,76,0,77,0,79,0,76,0,74,0,72,0,0,0,0,0,0,0];
+const RBAS=[48,0,55,0,52,0,55,0,48,0,55,0,52,0,55,0,53,0,60,0,57,0,60,0,55,0,62,0,59,0,62,0,57,0,64,0,60,0,64,0,53,0,60,0,57,0,60,0,55,0,62,0,59,0,62,0,55,0,59,0,62,0,67,0];
+const mhz=m=>440*Math.pow(2,(m-69)/12);
+function raceMusic(r,now){
+  if(!S.sound||r.phase!=='run')return;if(r.mt<now-200)r.mt=now;
+  while(r.mt<now+250){const i=r.mi++%64,w=Math.max(0,(r.mt-now)/1000);if(RMEL[i])tone(mhz(RMEL[i]),.11,w,'square',.016);if(RBAS[i])tone(mhz(RBAS[i]),.2,w,'triangle',.05);r.mt+=125}
+}
+function drawRace(now){
+  const r=race,T=window.__digiTest,sp=T&&T.speed||1;let dt=Math.min(.05,Math.max(0,now-r.last)/1000)*sp;r.last=now;
+  while(dt>0){const s=Math.min(dt,1/60);raceStep(r,s);dt-=s;if(race!==r)return drawHome(now)}
+  raceMusic(r,now);
+  const A=RART,t=SCN.t,cam=r.cam=raceCam(r),P=r.P,R=r.R;
+  g.drawImage(r.bg.sky,0,0);
+  if(SCN.p!=='night')[[14,.05,0],[28,.08,70],[20,.03,150]].forEach(([y,k,off])=>{const span=W+40,cx=((off-cam*k-now/140)%span+span)%span-20;g.drawImage(SCN.cloud,Math.round(cx),y)});
+  else{const tw=Math.floor(now/500);g.fillStyle='#fffbe0';for(let i=0;i<30;i+=4)if((tw+i)%5===0){const sx=(i*37+11)%W,sy=(i*53+7)%60+4;g.fillRect(sx-1,sy,3,1);g.fillRect(sx,sy-1,1,3)}}
+  const tile=(c,y,k)=>{const w=c.width,o=((Math.round(cam*k)%w)+w)%w;for(let x=-o;x<W;x+=w)g.drawImage(c,x,y)};
+  tile(r.bg.far,GROUND-48,.15);
+  g.fillStyle=t.cloud;for(let i=0;i<5;i++){const x=((i*29-Math.round(cam*.15)+Math.floor(now/300))%W+W)%W;if(Math.floor(now/400+i)%3)g.fillRect(x,GROUND-10+(i%3)*2,3,1)}
+  tile(r.bg.mid,GROUND-39,.4);
+  const lx=r.loopAt-cam;if(lx>-40&&lx<W+40)g.drawImage(r.loopC,Math.round(lx-r.loopC.width/2),Math.round(GROUND-LOOP_R-r.loopC.height/2));
+  /* the ground: grass on top of checkered earth */
+  const gy=GROUND+1,dirt=r.bg.dirt;g.fillStyle=t.grass;g.fillRect(0,gy,W,3);g.fillStyle=t.hill[0];for(let x=-(((cam%6)+6)%6);x<W;x+=6)g.fillRect(x,gy,2,1);
+  for(let row=0;gy+3+row*6<H;row++)for(let c=Math.floor(cam/8);c*8-cam<W;c++){g.fillStyle=(c+row)%2?dirt[0]:dirt[1];g.fillRect(c*8-cam,gy+3+row*6,8,6)}
+  g.fillStyle=OUT;g.fillRect(0,gy+3,W,1);
+  if(r.LEN-cam<W+20){const sx=-cam;for(let y=gy+4;y<H;y+=3)for(let i=0;i<2;i++){g.fillStyle=(i+Math.floor((y-gy)/3))%2?'#fffaf0':INK;g.fillRect(r.LEN+sx-3+i*3,y,3,3)}}
+  if(cam<20){for(let y=gy+4;y<H;y+=3)for(let i=0;i<2;i++){g.fillStyle=(i+Math.floor((y-gy)/3))%2?'#fffaf0':INK;g.fillRect(-cam+4+i*3,y,3,3)}}
+  /* the course */
+  const ring=A.ring[[0,0,0,1,2,1][Math.floor(now/110)%6]];
+  for(const o of r.objs){const sx=o.x-cam;if(sx<-24||sx>W+24)continue;
+    if(o.k==='ring'){if(!o.got)g.drawImage(ring,Math.round(sx-ring.width/2),Math.round(GROUND-o.h-ring.height/2))}
+    else if(o.k==='rock')drawSpr(A.rock,sx,gy,false);
+    else if(o.k==='bug'){if(!o.gone)drawSpr(A.bug,sx,gy,true,{lift:Math.floor(now/180+o.x)%2})}
+    else if(o.k==='bat'){if(!o.gone)drawSpr(A.bat,sx,GROUND-o.h-Math.sin(r.t*3+o.x)*4+(A.bat.fy-A.bat.tp)/2,false,{sy:Math.floor(now/160)%2?.9:1})}
+    else if(o.k==='spring')drawSpr(A.spring[r.t-(o.t??-9)<.3?1:0],sx,gy,false);
+    else if(o.k==='pad'){const c=A.pad[r.t-(o.t??-9)<1.6||Math.floor(now/200)%2?1:0];g.drawImage(c,Math.round(sx-c.width/2),gy)}
+    else if(o.k==='goal')drawGoal(r,sx)}
+  drawRunner(r,R,r.RS.SPB[r.f],r.RS.SPBF[r.f],r.rk2,now,false);
+  drawRunner(r,P,SPB[r.f],SPBF[r.f],r.mk,now,true);
+  /* where the rival is when it's just off the screen: a little arrow in its colour */
+  if(r.phase==='run'){const rs=R.x-cam;if((rs<-6&&rs>-200)||(rs>W+6&&rs<W+200)){const left=rs<0,x=left?7:W-8,y=GROUND-16;
+    for(let i=0;i<4;i++){g.fillStyle=OUT;g.fillRect(left?x+i-1:x-i-1,y-i-1,2,i*2+3);}
+    for(let i=0;i<3;i++){g.fillStyle=r.rcol;g.fillRect(left?x+i:x-i,y-i,1,i*2+1)}}}
+  raceHud(r);
+  if(r.phase==='count'){const n=3-Math.floor(r.t);if(n>=1)bigText(String(n),64,32,4,'#fffaf0',OUT)}
+  else if(r.phase==='run'&&r.t-r.t0<.8)bigText('GO!',64,32,4,'#fffaf0',OUT);
+  else if(r.phase==='result')bigText(r.place===1?'1ST':'2ND',64,36,3,r.place===1?'#ffd23a':'#fffaf0',OUT);
+}
+/* for the tests: what the race looks like right now */
+if(window.__digiTest)window.__digiTest.race=()=>race&&{phase:race.phase,lv:race.lv,rival:race.rname,x:Math.round(race.P.x),h:Math.round(race.P.h),air:race.P.air,jumps:race.P.jumps,v:Math.round(race.P.v),
+  rx:Math.round(race.R.x),rings:race.rings,t:+race.t.toFixed(2),LEN:race.LEN,place:race.place||0,loop:!!race.P.loop,inv:race.P.inv>0,cam:race.cam};
 /* ---------- messages: the bottom plate is the Digivice talking, the speech bubble is your partner ---------- */
 const msgEl=$('#msg'),bubEl=$('#bubble'),bubTxt=$('#btext'),bubGhost=$('#bghost'),bubSr=$('#bsr'),topEl=$('#lcdtop');
 let msgUntil=0,bubUntil=0,typing=null,bubAt=null;
@@ -8201,6 +9668,7 @@ function placeBubble(){
   else if(bubAt){x=bubAt.x;y=bubAt.y}
   else if(mode==='battle'&&battle){const sp=SPB[battle.phase==='evo'?Math.max(battle.from,battle.to):S.form],k=Math.min(1,48/sp.width);x=W*.3;y=GROUND-(sp.fy-sp.tp)*k}
   else if(mode==='play'&&visit){const q=playPos('me');x=q.x;y=q.y}
+  else if(mode==='race'&&race){x=race.hx??x;y=race.hy??GROUND-24}
   else if(anim&&(anim.type==='evo'||anim.type==='dedi')){x=W/2;y=headY(SPR[Math.max(anim.data.from,anim.data.to)])}
   else y=headY(cur());
   const lw=bubEl.parentNode.clientWidth,bw=bubEl.offsetWidth,bh=bubEl.offsetHeight,px=x/W*lw;
@@ -8214,6 +9682,7 @@ function idleHint(){
   if(S.stage===0)return 'Tap the egg to hatch it!';
   if(listening)return 'Listening... say something!';
   if(mode==='play'&&visit)return `Play date with ${pal(visit.friend)}!`;
+  if(mode==='race')return '';
   if(S.fainted)return `${NAME()} fainted. Tap HEAL!`;
   if(S.asleep)return 'Zzz... sleeping';
   if(chatOpen)return '';
@@ -8252,6 +9721,7 @@ function idleLine(){
   if(r<.52&&facts.length){const [k,v]=pick(facts);return {text:pick([`I was just thinking about ${v}. Your favorite ${k}!`,`${v} is the best ${k}, right ${o}?`])}}
   const wants=[
     {text:pick(['Can we battle? I feel strong!','Battle time? Pleeease?']),offer:'battle'},
+    {text:pick(['Can we race? I can run super fast!',"Let's do a race mission! Pleeease?"]),offer:'race'},
     {text:pick(['Can I have a treat?','I want a cookie!']),offer:'treat'},
     {text:'Want to see a trick?',offer:'trick'},
     {text:'Want to play rock paper scissors?',offer:'rps'},
@@ -8281,6 +9751,7 @@ function reply(raw){
   const t=norm(raw),has=re=>re.test(t);
   if(S.stage===0)return petTap();
   if(mode==='play')return playSay(raw);
+  if(mode==='race')return talk(pick(["I'm racing!",'Racing! Talk after!']),1400);
   if(ctxOn()&&ctxReply(raw,t))return;
   const rep=raw.match(/^(?:(?:can you|could you|please)\s+)?(?:say|repeat(?:\s+after\s+me)?)[\s,:]+(.+)$/i);
   if(rep&&mode==='home'&&!S.asleep&&!S.fainted)return talk(rep[1].replace(/[.!?\s]+$/,'')+'!',3200);
@@ -8305,9 +9776,10 @@ function reply(raw){
   if(has(/ (play ?dates?|come over and play)/))return linkPanel('play');
   if(has(/ friend code| my code/))return codePanel();
   if(has(/ (battle|fight|duel)/)&&has(/ (friend|online|live)/)&&!has(/ (dont|no) /))return linkPanel('duel');
+  if((has(/ (lets|wanna|want to|can we|go|do a|play|start a|start the) (a )?(race|racing)/)||has(/^ (race|racing|lets race) $/)||has(/ (race|racing) (mission|me|with me|game)/))&&!has(/ (dont|no) /))return doOffer('race');
   if(has(/ (lets |wanna |want to |can we )?(battle|fight|duel|spar)/)&&!has(/ (dont|no) /))return doOffer('battle');
   if(has(/ (have|eat|want) (a |some )?(treat|snack|cookie|candy|sweet|dessert|cake)/)||has(/^ (treat|snack|cookie) $/))return ready()&&feed('treat');
-  if(has(/ (eat|have|want) (a |some |your )?(food|meal|dinner|lunch|breakfast|meat|fish|honey|apples?|bread|shrimp|cherr(y|ies)|rice ?balls?|onigiri)/)||has(/^ (food|meal|meat|feed) $/)||has(/ feed /))return ready()&&feed('meal');
+  if(has(/ (eat|have|want) (a |some |your )?(food|meal|dinner|lunch|breakfast|meat|fish|honey|apples?|bread|shrimp|cherr(y|ies)|rice ?balls?|onigiri|pizza)/)||has(/^ (food|meal|meat|feed) $/)||has(/ feed /))return ready()&&feed('meal');
   if(has(/ (go to |time for |take a )?(sleep|bed|nap)/)&&!has(/ (you|are) (sleepy|tired)/)||has(/ good ?night /))return sleep();
   if(has(/ (take|have|need) (your |some )?(medicine)| heal /))return heal();
   if(smartReady()){CTX=null;return askClaude(raw)}
@@ -8332,6 +9804,7 @@ function doOffer(act,c={}){
     case'sleep':return sleep();
     case'heal':return heal();
     case'battle':{if(!ready())return;const w=battleWhy();if(w){bad();return talk(WHY_PET[w])}return startBattle()}
+    case'race':{if(!ready())return;const w=battleWhy();if(w){bad();return talk(WHY_RACE[w])}return startRace()}
     case'trick':{const ok=TRICKS.filter(x=>x.min<=S.form);return doTrick(Math.random()<.3?atkTrick(S.form):pick(ok))}
     case'evo':return goForm(S.form+1);
     case'evo-to':{goForm(c.to);if(c.trick||c.then){const tr=c.trick?TRICKS.find(x=>x.id===c.trick):atkTrick(c.to);setTimeout(()=>{if(S.form===c.to&&!anim)doTrick(tr)},4200)}return}
@@ -8374,7 +9847,7 @@ function ctxReply(raw,t){
     if(hit(own(c.b,c.a))){CTX=null;talk(`${c.b}? Good pick!`);return true}
     if(notAnswer(t,raw))return false;
     CTX=null;talk(pick(['Ooh, interesting!','Hehe, me too!']));return true}
-  if(c.type==='ask'){if(EVO_UP.test(t)||EVO_DOWN.test(t)||/ (battle|feed|treat|sleep|heal|joke|riddle|story)/.test(t))return false;
+  if(c.type==='ask'){if(EVO_UP.test(t)||EVO_DOWN.test(t)||/ (battle|race|feed|treat|sleep|heal|joke|riddle|story)/.test(t))return false;
     const words=t.trim().split(' ').length;
     if(has(/ (what about you|how about you|and you|whats yours|what is yours|you first|you go first|you tell me) /)){c.t=Date.now();
       talk(c.key==='pet'?'I have you, hehe! Do you have a pet?':myFav(c.key)?`Mine is ${myFav(c.key)}! What's yours?`:'You first! Hehe!',3200);return true}
@@ -8534,7 +10007,7 @@ How to reply:
 - You can chat, answer questions simply and truthfully, tell jokes, riddles and tiny stories, play word games, and talk about feelings. If you don't know something, say so in a fun way.
 Right now: ${new Date().toLocaleString([],{weekday:'long',hour:'numeric',minute:'2-digit'})}, it is ${SCN.p}, and you are at the ${SCN.pl}. Food ${Math.round(S.food)}/100, joy ${Math.round(S.joy)}/100, health ${Math.round(S.health)}/100, energy ${Math.round(S.energy)}/100. ${o} has won ${S.wins} battles with you.
 Things ${o} told you before: ${notes.length?notes.join('; '):'nothing yet'}.
-If the person asks you to do something you can do, set "do" to one of: ${tricks.join(', ')}, attack, eat, treat, sleep, heal, battle, digivolve, dedigivolve. Otherwise "none". With digivolve or dedigivolve you may set "to" to a form name.
+If the person asks you to do something you can do, set "do" to one of: ${tricks.join(', ')}, attack, eat, treat, sleep, heal, battle, race, digivolve, dedigivolve. Otherwise "none". With digivolve or dedigivolve you may set "to" to a form name.
 If the person shares a new fact about themselves, put a 2 to 6 word note in "remember", otherwise null.
 Reply with only this JSON: {"say": "...", "do": "none", "to": null, "remember": null}`;
 }
@@ -8567,6 +10040,7 @@ function smartAct(act,to,line){
   if(act==='sleep'&&!S.asleep){talk(line);return later(()=>{if(!S.asleep)sleep()},2200)}
   if(act==='heal'&&S.health<95){heal();return later(()=>talk(line),1300)}
   if(act==='battle'){talk(line);return later(()=>doOffer('battle'),1800)}
+  if(act==='race'){talk(line);return later(()=>doOffer('race'),1800)}
   if(act==='digivolve'&&S.form<5){talk(line);return later(()=>goForm(tf&&tf>S.form?tf:S.form+1),1500)}
   if(act==='dedigivolve'&&S.form>1){talk(line);return later(()=>goForm(tf&&tf<S.form?tf:S.form-1),1500)}
   talk(line);
@@ -8619,13 +10093,13 @@ const clip=(s,n)=>Array.from(String(s==null?'':s).replace(/\p{C}/gu,'').replace(
 const rid=()=>Math.random().toString(36).slice(2,9);
 const okId=s=>typeof s==='string'&&/^[a-z0-9]{3,12}$/.test(s);
 const PLAY_ACTS=['dance','hi5','snack','hug'];
-const ST=['home','battle','play','sleep','sick','busy'],ST_TXT={battle:'Battling',play:'Playing',sleep:'Asleep',sick:'Sick',busy:'Busy'};
+const ST=['home','battle','play','race','sleep','sick','busy'],ST_TXT={battle:'Battling',play:'Playing',race:'Racing',sleep:'Asleep',sick:'Sick',busy:'Busy'};
 const WHY_NO={no:'said maybe later',busy:'is busy right now',sleep:'is asleep',sick:"isn't feeling well",tired:'is too tired to battle',weak:'is too weak to battle',hungry:'is too hungry to battle'};
 /* a partner that isn't nicknamed is saved by its earned form, so a friend sees the right Digimon */
 const rankName=(n,f,l)=>ALL_SPECIES.includes(String(n).toLowerCase())?(LINES[l]||LINES.agumon).forms[f].name:n;
 const okLine=l=>LINES[l]?l:'agumon';
 
-function myStatus(){return S.asleep?'sleep':S.fainted?'sick':mode==='battle'?'battle':mode==='play'?'play':!setupEl.hidden||anim&&['evo','dedi','hatch'].includes(anim.type)?'busy':'home'}
+function myStatus(){return S.asleep?'sleep':S.fainted?'sick':mode==='battle'?'battle':mode==='play'?'play':mode==='race'?'race':!setupEl.hidden||anim&&['evo','dedi','hatch'].includes(anim.type)?'busy':'home'}
 function linkSync(){
   if(!LK.room)return;
   P.dv=S.stage>0&&S.owner?{v:1,o:clip(OWNER(),12),n:clip(nm(),12),f:Math.max(1,S.form),r:S.stage,m:clip(S.model||'d3',12),l:S.line,u:clip(S.uid,12),w:Math.min(9999,S.wins|0),st:myStatus()}:null;
@@ -8786,7 +10260,7 @@ function copyCode(code){
 
 /* ---------- the friends menus ---------- */
 function linkPanel(k,keep){
-  if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');
+  if(mode!=='home')return say(BUSY[mode]);
   const live=LK.room?LK.peers.slice(0,5):[],on=new Set(live.map(p=>p.dv.o.toLowerCase()));
   const fr=friendList().filter(f=>!on.has(clip(f.o,12).toLowerCase())).slice(0,5),items=[],old=keep&&panel?panel.sel:0;
   for(const p of live)items.push({label:esc(pal(p.dv)),detail:p.dv.st==='home'?'Online':ST_TXT[p.dv.st]||'Busy',disabled:p.dv.st!=='home',why:`${p.dv.o}'s Digivice is busy. Try again soon.`,
@@ -9015,8 +10489,11 @@ function decal(par,c,d,sh,k,S){const D=V3(...d).normalize(),U=V3(0,1,0).cross(D)
 function face(R,h,s,f){const eo=grp(h),es=grp(h),eh=grp(h),{rx,ry}=f,eye=s.eye||'#36c24a',lt=mix(eye,'#ffffff',.45),S=f.S||ball;es.visible=eh.visible=false;
   for(const sx of[-1,1]){const d=[sx*f.ex,f.ey,1],L=(g,sh,c,e)=>decal(g,c,d,sh,'b',S(e));
     if(f.iris){L(eo,ell(0,0,rx*1.13,ry*1.13),INK,.006);L(eo,ell(0,0,rx,ry),eye,.011);L(eo,ell(0,-ry*.42,rx*.72,ry*.46),lt,.015);L(eo,ell(-sx*rx*.07,-ry*.02,rx*.56,ry*.6),INK,.019)}
+    /* cres: a black eye with the colour only as a crescent along the bottom (Agumon, after Mylo's picture) */
+    else if(f.cres){L(eo,ell(0,0,rx,ry),INK,.006);L(eo,ell(0,-ry*.4,rx*.86,ry*.54),eye,.012);L(eo,ell(0,-ry*.06,rx*.94,ry*.56),INK,.018)}
     else{L(eo,ell(0,0,rx,ry),INK,.006);L(eo,ell(0,-ry*.4,rx*.8,ry*.54),eye,.012);L(eo,ell(0,-ry*.6,rx*.5,ry*.28),lt,.018)}
-    L(eo,ell(-rx*.26,ry*.36,rx*.36,ry*.3,-.4),'#ffffff',.024);L(eo,ell(rx*.36,-ry*.3,rx*.15,rx*.15),'#ffffff',.024);
+    if(f.cres){L(eo,ell(-rx*.3,ry*.34,rx*.3,ry*.26,-.2),'#ffffff',.024);L(eo,ell(rx*.3,-ry*.66,rx*.13,rx*.1),'#ffffff',.024)}
+    else{L(eo,ell(-rx*.26,ry*.36,rx*.36,ry*.3,-.4),'#ffffff',.024);L(eo,ell(rx*.36,-ry*.3,rx*.15,rx*.15),'#ffffff',.024)}
     L(es,stroke(arc(0,ry*.55,ry*.8,PI*1.22,PI*1.78),ry*.3),INK,.006);
     L(eh,stroke(arc(0,-ry*.6,ry*.75,PI*.18,PI*.82),ry*.3),INK,.006);
     if(f.bx)decal(h,'#ff8fa6',[sx*f.bx,f.by,1],ell(0,0,f.brx,f.bry),'',S(.004))}
@@ -9113,9 +10590,10 @@ function agumon(R,m,s){const B=s.body,ac=s.armor||'#ffd23a',ad=s.armorD||mix(ac,
   for(const sx of[-1,1]){const e=[[.2,YM+.035,.0],[.21,YM+.075,-.03]].map(([x,y,z])=>hdir(sx*x,y,z));sx<0?lp.push(...e.reverse()):lp.push(...e)}
   for(let i=0;i<=30;i++)lp.splice(2+i,0,seam((i/15-1)*1.85));
   R.lip=add(hd,new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(lp.map(d=>hp(d,.012))),80,.0065,6),M(lc,'b'))); // the smile line when the mouth is shut
-  for(const sx of[-1,1])for(const a of[.45,.85,1.25]){const q=hp(seam(sx*a),.004);G(hd,cone(.009,.024),WH,[q.x,q.y+.004,q.z],[PI,0,0],{ol:.004})}
-  for(const sx of[-1,1])decal(hd,lc,[sx*.107,.095,1],ell(0,0,.035,.022),'b',hpF(.006));
-  face(R,{add:o=>hd.add(o)},s,{iris:1,ex:EYE[0],ey:EYE[1],rx:.22,ry:.24,bx:2,by:-.1,brx:.14,bry:.08,S:hpF});
+  if(!s.dark)for(const sx of[-1,1])for(const a of[.45,.85,1.25]){const q=hp(seam(sx*a),.004);G(hd,cone(.009,.024),WH,[q.x,q.y+.004,q.z],[PI,0,0],{ol:.004})}
+  for(const sx of[-1,1])decal(hd,lc,[sx*(s.dark?.125:.107),.095,1],ell(0,0,.035,.022),'b',hpF(.006));
+  // the rookie's face follows Mylo's picture (s.dark): big black eyes with a teal crescent, no blush, no teeth
+  face(R,{add:o=>hd.add(o)},s,s.dark?{cres:1,ex:EYE[0]*.96,ey:EYE[1]*1.04,rx:.34,ry:.39,S:hpF}:{iris:1,ex:EYE[0],ey:EYE[1],rx:.22,ry:.24,bx:2,by:-.1,brx:.14,bry:.08,S:hpF});
   if(s.helmet)helmet(hd,s)}
 /* the skull helmet over the head and the top of the snout, eye holes, the nose left bare; big two-tone horns, red marks */
 const tab=t=>x=>{let i=0;while(i<t.length-4&&x>t[i+2])i+=2;return lerp(t[i+1],t[i+3],sm(t[i],t[i+2],x))};
@@ -10030,6 +11508,7 @@ function sleep(){
 function petTap(){
   if(S.stage===0){S.taps++;beep();if(S.taps>=5){startAnim('hatch',1500,{},hatchDone);seq([523,659,784,1046,1318],.1);say('It is hatching!')}else{startAnim('wob',350);say(['Crack!','It moved!','Almost!','One more tap!'][S.taps-1]||'')}save();return}
   if(mode==='battle')return strike();
+  if(mode==='race')return raceJump();
   if(mode==='play')return playTap();
   if(anim||panel)return;
   if(S.asleep)return talk('Zzz...',1400,{quiet:true});
@@ -10078,6 +11557,7 @@ function battlePanel(){
   const w=battleWhy(),why=w?WHY_SYS[w]:'',n=linkCount();
   openPanel({title:'Battle',tag:`${S.wins}W ${S.losses}L`,html:`<p class="req">Tap the screen (or B) when the power bar is full for a perfect hit. Tap EVOLVE mid-fight to digivolve!</p>`,items:[
     {label:'Wild battle',detail:why?'Not ready':'Go!',disabled:!!why,why,act:()=>{closePanel();startBattle()}},
+    {label:'Race mission',detail:why?'Not ready':`#${Math.max(1,S.raceLv|0)}`,disabled:!!why,why:why.replace('battle','race'),act:()=>{closePanel();startRace()}},
     {label:'Battle a friend',detail:n?`${n} online`:'',disabled:!!why,why,act:()=>linkPanel('duel')},
     {label:'Back',act:closePanel}]});
 }
@@ -10111,7 +11591,7 @@ function statusPanel(){
     else{so.label='Tap again to erase';panel.arm=1;renderPanel()}}};
   openPanel({title:'Status',tag:FORMS[S.stage].stage,html:`<div class="sgrid">
     <span>Name</span><b>${esc(NAME())}</b><span>Form</span><b>${f.name}</b><span>Rank</span><b>${FORMS[S.stage].stage}</b><span>Age</span><b>${days} day${days===1?'':'s'}</b>
-    <span>Battles</span><b>${S.wins} won ${S.losses} lost</b><span>Owner</span><b>${esc(OWNER())}</b></div>
+    <span>Battles</span><b>${S.wins} won ${S.losses} lost</b><span>Races</span><b>${S.raceWins|0} won, mission ${Math.max(1,S.raceLv|0)}</b><span>Owner</span><b>${esc(OWNER())}</b></div>
     <div class="ptitle"><span>Digivolution path</span></div><div class="path" id="path"></div><p class="req">${reqText()} Progress saves on this device.</p>`,
     after:()=>drawPath(false),items:[{label:'Rename partner',act:()=>namePanel(false)},{label:'Friends',detail:n?`${n} online`:'Codes',act:()=>linkPanel()},bg,sp,snd,...(SAMPLE?[sm]:[]),
       {label:'Main menu',detail:'Digivices',act:()=>{closePanel();showSetup(false)}},so,{label:'Close',act:closePanel}]});
@@ -10201,6 +11681,7 @@ pbtns.forEach(b=>{b.insertAdjacentHTML('afterbegin',svg(PICONS[b.dataset.play]))
 [...icons,...pbtns].forEach(b=>b.onclick=()=>{ac();focusBtn=b;markFocus();b._go()});
 for(const [id,rows] of Object.entries(CB_ICONS)){const b=$('#'+id);if(b)b.insertAdjacentHTML('afterbegin',svg(rows))}
 function doIcon(a){
+  if(mode==='race')return say(BUSY.race,2200);
   if(a==='talk'){if(panel)closePanel();return talkIcon()}
   if(panel)closePanel();
   if(mode==='battle'){if(a==='evolve')return evolveIcon();return say('Finish the battle first! (C runs away)')}
@@ -10220,11 +11701,13 @@ function markFocus(){document.querySelectorAll('.icon').forEach(b=>b.classList.t
 function keyA(){ac();beep();
   if(panel){let i=panel.sel;for(let n=0;n<panel.items.length;n++){i=(i+1)%panel.items.length;if(!panel.items[i].disabled)break}panel.sel=i;return renderPanel()}
   if(mode==='battle')return strike();
+  if(mode==='race')return raceJump();
   if(S.stage===0)return petTap();
   const L=visBtns();if(!L.length)return;focusBtn=L[(L.indexOf(focusBtn)+1)%L.length];markFocus();say(focusBtn.textContent.trim()+'  (B to open)',1500)}
 function keyB(){ac();
   if(panel)return choose(panel.sel);
   if(mode==='battle')return strike();
+  if(mode==='race')return raceJump();
   if(S.stage===0)return petTap();
   if(focusBtn&&focusBtn.offsetParent)return focusBtn._go();
   petTap()}
@@ -10233,6 +11716,7 @@ function keyC(){ac();beep();
   if(panel)return closePanel();
   if(chatOpen)return closeChat();
   if(mode==='battle'&&battle&&battle.phase==='aim')return battle.kind==='duel'?duelFlee():endBattle(false,true);
+  if(mode==='race')return endRace('quit');
   focusBtn=null;markFocus();hideBubble()}
 $('#kA').onclick=keyA;$('#kB').onclick=keyB;$('#kC').onclick=keyC;
 /* the AR button: your partner in 3D, in a little room or over the camera, to walk around and place in your own room.
@@ -10242,7 +11726,7 @@ function open3D(){
   ac();beep();
   if(listening){try{rec.abort()}catch(e){}listening=false;setTalkUI()}
   if(panel)closePanel();if(chatOpen)closeChat();
-  if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');
+  if(mode!=='home')return say(BUSY[mode]);
   if(anim)return;
   if(S.stage&&S.fainted){say(`${NAME()} fainted. Tap HEAL!`);bad();return}
   if(S.asleep)return say('Shh... sleeping. Tap SLEEP to wake up.');
@@ -10263,15 +11747,16 @@ function openMenu(){
   ac();beep();
   if(listening){try{rec.abort()}catch(e){}listening=false;setTalkUI()}
   if(chatOpen)closeChat();
-  if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');
+  if(mode!=='home')return say(BUSY[mode]);
   if(anim&&['evo','dedi','hatch'].includes(anim.type))return say(anim.type==='hatch'?'Hatching... one sec!':'Digivolving... one sec!');
   showSetup(false);
 }
 $('#i-menu').onclick=openMenu;
-chipEl.onclick=()=>{ac();beep();if(mode!=='home')return say(mode==='battle'?'Finish the battle first!':'Tap BYE to end the play date first.');linkPanel()};
+chipEl.onclick=()=>{ac();beep();if(mode!=='home')return say(BUSY[mode]);linkPanel()};
 cv.addEventListener('pointerdown',e=>{e.preventDefault();ac();petTap()});
 addEventListener('keydown',e=>{if(!setupEl.hidden&&e.key==='Escape'&&!setupFirst){e.preventDefault();return closeSetup(false)}
   if(e.metaKey||e.ctrlKey||e.altKey||e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName)||!setupEl.hidden||AR.isOpen())return;const k=e.key.toLowerCase();
+  if(e.repeat&&mode==='race'){e.preventDefault();return}
   if(k==='a'||k==='arrowright'){e.preventDefault();keyA()}else if(k==='b'||k==='enter'||k===' '){e.preventDefault();keyB()}else if(k==='c'||k==='escape'){e.preventDefault();keyC()}
   else if(k==='m'){e.preventDefault();openMenu()}});
 ['touchend','click'].forEach(ev=>addEventListener(ev,()=>ac(),{capture:true,passive:true}));
@@ -10310,13 +11795,14 @@ function frame(now){
     if(mode!=='battle'&&!(anim&&(anim.type==='evo'||anim.type==='dedi')))simulate(m,false);
     if(mode==='home'&&!anim&&!panel&&!S.fainted&&!S.asleep&&S.form>base()&&S.energy<=4)dedigivolve('tired');
     if(mode==='play'&&S.fainted)endPlay('me');
+    if(mode==='race'&&S.fainted)endRace('quit');
     linkTick();updUI();if(now-lastSave>10000){lastSave=now;save()}checkEvo();idleChat(now);if(mode==='play')aiTick(now)}
   if(anim&&now-anim.t0>=anim.dur){const a=anim;anim=null;a.onEnd&&a.onEnd();if(!anim)checkEvo();
     if(!anim&&heardQ&&mode==='home'){const q=heardQ;heardQ=null;reply(q)}}
   if(bubUntil&&Date.now()>bubUntil)hideBubble();
   typeTick(now);paintSky(now);
   g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.drawImage(SCN.bg,0,0);sceneFx(now);
-  if(mode==='battle'&&battle)drawBattle(now);else if(mode==='play'&&visit)drawPlay(now);else drawHome(now);
+  if(mode==='battle'&&battle)drawBattle(now);else if(mode==='play'&&visit)drawPlay(now);else if(mode==='race'&&race)drawRace(now);else drawHome(now);
   if(S.asleep&&mode==='home'&&S.stage){g.fillStyle='rgba(24,34,18,.42)';g.fillRect(0,0,W,H);
     if(now-lastZ>1100){lastZ=now;addP({spr:ZED,x:pet.x+10,y:headY(cur())-2,vx:.008,vy:-.012,life:1600})}}
   drawParts(now);placeBubble();
